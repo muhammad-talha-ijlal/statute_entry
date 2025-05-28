@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}All Statutes{% endblock %}
+
+{% block content %}
+<div class="statutes-list-container">
+    <div class="header-with-actions">
+        <h2>All Statutes</h2>
+        <a href="{{ url_for('statute.add_statute') }}" class="btn btn-primary">Add New Statute</a>
+    </div>
+    
+    <div class="search-container">
+        <form action="{{ url_for('statute.list_statutes') }}" method="get">
+            <input type="text" name="search" placeholder="Search statutes..." value="{{ search if search else '' }}">
+            <button type="submit" class="btn btn-search">Search</button>
+            {% if search %}
+            <a href="{{ url_for('statute.list_statutes') }}" class="btn btn-clear">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if statutes %}
+    <table class="statutes-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Act Number</th>
+                <th>Date</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for statute in statutes %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">
+                        {{ statute.name }}
+                    </a>
+                </td>
+                <td>{{ statute.act_no if statute.act_no else "-" }}</td>
+                <td>{{ statute.date.strftime('%Y-%m-%d') if statute.date else "-" }}</td>
+                <td>{{ statute.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn-small">View</a>
+                    <a href="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" class="btn-small">Edit</a>
+                    <form action="{{ url_for('statute.delete_statute', statute_id=statute.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this statute?');">
+                        <button type="submit" class="btn-small btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="pagination">
+        <!-- Pagination controls would go here -->
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No statutes found.</p>
+        <a href="{{ url_for('statute.add_statute') }}" class="btn btn-primary">Add Your First Statute</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

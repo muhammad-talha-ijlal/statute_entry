@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+
+{% block title %}All Annotations{% endblock %}
+
+{% block content %}
+<div class="annotations-list-container">
+    <div class="header-with-actions">
+        <h2>All Annotations</h2>
+        <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id) }}" class="btn btn-primary">Add New Annotation</a>
+    </div>
+    
+    <div class="search-container">
+        <form action="{{ url_for('annotation.list_annotations') }}" method="get">
+            <input type="text" name="search" placeholder="Search annotations..." value="{{ search if search else '' }}">
+            <button type="submit" class="btn btn-search">Search</button>
+            {% if search %}
+            <a href="{{ url_for('annotation.list_annotations') }}" class="btn btn-clear">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if annotations %}
+    <table class="annotations-table">
+        <thead>
+            <tr>
+                <th>Annotation Number</th>
+                <th>Page Number</th>
+                <th>Footnote</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for annotation in annotations %}
+            <tr>
+                <td>{{ annotation.no }}</td>
+                <td>{{ annotation.page_no if annotation.page_no else "-" }}</td>
+                <td class="footnote-cell">{{ annotation.footnote|truncate(100) }}</td>
+                <td>{{ annotation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('annotation.edit_annotation', annotation_id=annotation.id) }}" class="btn-small">Edit</a>
+                    <form action="{{ url_for('annotation.delete_annotation', annotation_id=annotation.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this annotation?');">
+                        <button type="submit" class="btn-small btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="pagination">
+        <!-- Pagination controls would go here -->
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No annotations found.</p>
+        <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id ) }}" class="btn btn-primary">Add Your First Annotation</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

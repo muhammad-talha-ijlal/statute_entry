@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Statute{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Edit Statute</h2>
+    
+    <form method="POST" action="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" id="editStatuteForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            {{ form.name(class="form-control", required=true) }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="act_no">Act Number</label>
+            {{ form.act_no(class="form-control") }}
+            {% if form.act_no.errors %}
+                <div class="error-message">{{ form.act_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="date">Date</label>
+            {{ form.date(class="form-control", type="date") }}
+            {% if form.date.errors %}
+                <div class="error-message">{{ form.date.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="preface">Preface</label>
+            {{ form.preface(class="form-control", rows=5) }}
+            {% if form.preface.errors %}
+                <div class="error-message">{{ form.preface.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Statute</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

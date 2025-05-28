@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}Add New Statute{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Add New Statute</h2>
+    
+    <form method="POST" action="{{ url_for('statute.add_statute') }}" id="statuteForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            {{ form.name(class="form-control", required=true) }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="act_no">Act Number</label>
+            {{ form.act_no(class="form-control") }}
+            {% if form.act_no.errors %}
+                <div class="error-message">{{ form.act_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="date">Date</label>
+            {{ form.date(class="form-control", type="date") }}
+            {% if form.date.errors %}
+                <div class="error-message">{{ form.date.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="preface">Preface</label>
+            {{ form.preface(class="form-control", rows=5) }}
+            {% if form.preface.errors %}
+                <div class="error-message">{{ form.preface.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Statute</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation and submission handling
+        const form = document.getElementById('statuteForm');
+        
+        form.addEventListener('submit', function(e) {
+            // Prevent multiple submissions
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Saving...';
+        });
+    });
+</script>
+{% endblock %}

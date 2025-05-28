@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Annotation{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <span>Add Annotation</span>
+    </div>
+
+    <h2>Add Annotation for {{ statute.name }}</h2>
+    
+    <form method="POST" action="{{ url_for('annotation.add_annotation', statute_id=statute.id) }}" id="annotationForm">
+        {{ form.csrf_token }}
+        {{ form.statute_id }}
+        
+        <div class="form-group">
+            <label for="no">Annotation Number <span class="required">*</span></label>
+            {{ form.no(class="form-control", required=true) }}
+            {% if form.no.errors %}
+                <div class="error-message">{{ form.no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="page_no">Page Number</label>
+            {{ form.page_no(class="form-control") }}
+            {% if form.page_no.errors %}
+                <div class="error-message">{{ form.page_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="footnote">Footnote <span class="required">*</span></label>
+            {{ form.footnote(class="form-control", rows=5, required=true) }}
+            {% if form.footnote.errors %}
+                <div class="error-message">{{ form.footnote.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" name="action" value="save" class="btn btn-primary">Save Annotation</button>
+            <button type="submit" name="action" value="save_and_add_another" class="btn btn-secondary">Save & Add Another</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form validation and submission handling
+        const form = document.getElementById('annotationForm');
+        
+        form.addEventListener('submit', function(e) {
+            // Prevent multiple submissions
+            const submitButtons = form.querySelectorAll('button[type="submit"]');
+            submitButtons.forEach(button => {
+                button.disabled = true;
+                button.dataset.originalText = button.innerHTML;
+                button.innerHTML = 'Saving...';
+            });
+            
+            // Re-enable after a short delay if the form doesn't submit for some reason
+            setTimeout(() => {
+                submitButtons.forEach(button => {
+                    if (button.disabled) {
+                        button.disabled = false;
+                        button.innerHTML = button.dataset.originalText || 'Submit';
+                    }
+                });
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

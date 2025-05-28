@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+
+{% block title %}Home - Legal Text Structuring App{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h2>Welcome to the Legal Text Structuring App</h2>
+    <p>Structure legal texts efficiently with our hierarchical data entry system.</p>
+</div>
+
+<div class="options-container">
+    <div class="option-card">
+        <h3>Add New Statute</h3>
+        <p>Create a new statute and start structuring its contents.</p>
+        <a href="{{ url_for('statute.add_statute') }}" class="btn btn-primary">Add New Statute</a>
+    </div>
+    
+    <div class="option-card">
+        <h3>Resume Existing Statute</h3>
+        <p>Continue working on a previously started statute.</p>
+        <form action="{{ url_for('statute.list_statutes') }}" method="get">
+            <button type="submit" class="btn btn-secondary">Select Statute</button>
+        </form>
+    </div>
+</div>
+
+<div class="recent-statutes">
+    <h3>Recently Added Statutes</h3>
+    {% if recent_statutes %}
+        <ul class="statute-list">
+            {% for statute in recent_statutes %}
+                <li>
+                    <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">
+                        {{ statute.name }}
+                    </a>
+                    <span class="date">{{ statute.created_at.strftime('%Y-%m-%d') }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No statutes have been added yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

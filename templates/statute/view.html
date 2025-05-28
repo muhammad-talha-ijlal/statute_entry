@@ -1,0 +1,502 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ statute.name }}{% endblock %}
+
+{% block content %}
+<div class="statute-container">
+    <div class="statute-header">
+        <h2>{{ statute.name }}</h2>
+        <div class="statute-meta">
+            {% if statute.act_no %}
+            <div><strong>Act Number:</strong> {{ statute.act_no }}</div>
+            {% endif %}
+            
+            {% if statute.date %}
+            <div><strong>Date:</strong> {{ statute.date.strftime('%Y-%m-%d') }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" class="btn btn-secondary">Edit Statute</a>
+            <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add Part</a>
+            <a href="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" class="btn btn-primary">Add Schedule</a>
+            <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id)  }}" class="btn btn-outline">Add Annotation</a>
+            <a href="{{ url_for('annotation.list_statute_annotations', statute_id=statute.id) }}" class="btn btn-secondary">View Annotations</a>
+        </div>
+    </div>
+    
+    {% if statute.preface %}
+    <div class="statute-preface">
+        <h3>Preface</h3>
+        <div class="content">{{ statute.preface }}</div>
+    </div>
+    {% endif %}
+    
+    <div class="statute-structure">
+        <div class="structure-header">
+            <h3>Structure</h3>
+            <div class="structure-controls">
+                <button type="button" class="btn-small btn-expand-all">Expand All</button>
+                <button type="button" class="btn-small btn-collapse-all">Collapse All</button>
+            </div>
+        </div>
+        
+        {% if parts %}
+        <div class="hierarchy-tree">
+            <ul class="parts-list tree-root">
+                {% for part in parts %}
+                <li class="tree-node part-node" data-level="part" data-id="{{ part.id }}">
+                    <div class="tree-item part-item">
+                        <div class="tree-toggle">
+                            <i class="toggle-icon expanded">▼</i>
+                            <i class="toggle-icon collapsed">▶</i>
+                        </div>
+                        <div class="tree-content">
+                            <span class="item-label">PART</span>
+                            <span class="item-number">{{ part.part_no if part.part_no else "" }}</span>
+                            <span class="item-name">{{ part.name }}</span>
+                        </div>
+                        <div class="tree-actions">
+                            <a href="{{ url_for('hierarchy.add_chapter', part_id=part.id) }}" class="btn-small btn-add" title="Add Chapter">
+                                <i class="action-icon add-icon">+</i> Add Chapter
+                            </a>
+                            <a href="#" class="btn-small btn-delete" title="Delete Part" onclick="document.getElementById('delete-part-form-{{ part.id }}').submit(); return false;">
+                                <i class="action-icon delete-icon">×</i> Delete
+                            </a>
+                            <form id="delete-part-form-{{ part.id }}" action="{{ url_for('hierarchy.delete_part', part_id=part.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this part and all its components?');" style="display: none;"></form>
+                        </div>
+                    </div>
+                    
+                    {% if part.chapters %}
+                    <ul class="chapters-list tree-children">
+                        {% for chapter in part.chapters %}
+                        <li class="tree-node chapter-node" data-level="chapter" data-id="{{ chapter.id }}">
+                            <div class="tree-item chapter-item">
+                                <div class="tree-toggle">
+                                    <i class="toggle-icon expanded">▼</i>
+                                    <i class="toggle-icon collapsed">▶</i>
+                                </div>
+                                <div class="tree-content">
+                                    <span class="item-label">CHAPTER</span>
+                                    <span class="item-number">{{ chapter.chapter_no if chapter.chapter_no else "" }}</span>
+                                    <span class="item-name">{{ chapter.name }}</span>
+                                </div>
+                                <div class="tree-actions">
+                                    <a href="{{ url_for('hierarchy.add_set', chapter_id=chapter.id) }}" class="btn-small btn-add" title="Add Set">
+                                        <i class="action-icon add-icon">+</i> Add Set
+                                    </a>
+                                    <a href="#" class="btn-small btn-delete" title="Delete Chapter" onclick="document.getElementById('delete-chapter-form-{{ chapter.id }}').submit(); return false;">
+                                        <i class="action-icon delete-icon">×</i> Delete
+                                    </a>
+                                    <form id="delete-chapter-form-{{ chapter.id }}" action="{{ url_for('hierarchy.delete_chapter', chapter_id=chapter.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this chapter and all its components?');" style="display: none;"></form>
+                                </div>
+                            </div>
+                            
+                            {% if chapter.sets %}
+                            <ul class="sets-list tree-children">
+                                {% for set in chapter.sets %}
+                                <li class="tree-node set-node" data-level="set" data-id="{{ set.id }}">
+                                    <div class="tree-item set-item">
+                                        <div class="tree-toggle">
+                                            <i class="toggle-icon expanded">▼</i>
+                                            <i class="toggle-icon collapsed">▶</i>
+                                        </div>
+                                        <div class="tree-content">
+                                            <span class="item-label">SET</span>
+                                            <span class="item-number">{{ set.set_no if set.set_no else "" }}</span>
+                                            <span class="item-name">{{ set.name }}</span>
+                                        </div>
+                                        <div class="tree-actions">
+                                            <a href="{{ url_for('hierarchy.add_section', set_id=set.id) }}" class="btn-small btn-add" title="Add Section">
+                                                <i class="action-icon add-icon">+</i> Add Section
+                                            </a>
+                                            <a href="#" class="btn-small btn-delete" title="Delete Set" onclick="document.getElementById('delete-set-form-{{ set.id }}').submit(); return false;">
+                                                <i class="action-icon delete-icon">×</i> Delete
+                                            </a>
+                                            <form id="delete-set-form-{{ set.id }}" action="{{ url_for('hierarchy.delete_set', set_id=set.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this set and all its components?');" style="display: none;"></form>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if set.sections %}
+                                    <ul class="sections-list tree-children">
+                                        {% for section in set.sections %}
+                                        <li class="tree-node section-node" data-level="section" data-id="{{ section.id }}">
+                                            <div class="tree-item section-item">
+                                                <div class="tree-toggle">
+                                                    <i class="toggle-icon expanded">▼</i>
+                                                    <i class="toggle-icon collapsed">▶</i>
+                                                </div>
+                                                <div class="tree-content">
+                                                    <span class="item-label">SECTION</span>
+                                                    <span class="item-number">{{ section.section_no if section.section_no else "" }}</span>
+                                                    <span class="item-name">{{ section.name }}</span>
+                                                </div>
+                                                <div class="tree-actions">
+                                                    <a href="{{ url_for('hierarchy.add_subsection', section_id=section.id) }}" class="btn-small btn-add" title="Add Subsection">
+                                                        <i class="action-icon add-icon">+</i> Add Subsection
+                                                    </a>
+                                                    <a href="#" class="btn-small btn-delete" title="Delete Section" onclick="document.getElementById('delete-section-form-{{ section.id }}').submit(); return false;">
+                                                        <i class="action-icon delete-icon">×</i> Delete
+                                                    </a>
+                                                    <form id="delete-section-form-{{ section.id }}" action="{{ url_for('hierarchy.delete_section', section_id=section.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this section and all its subsections?');" style="display: none;"></form>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if section.subsections %}
+                                            <ul class="subsections-list tree-children">
+                                                {% for subsection in section.subsections %}
+                                                <li class="tree-node subsection-node leaf-node" data-level="subsection" data-id="{{ subsection.id }}">
+                                                    <div class="tree-item subsection-item">
+                                                        <div class="tree-leaf-spacer"></div>
+                                                        <div class="tree-content">
+                                                            <span class="item-label">SUBSECTION</span>
+                                                            <span class="item-number">{{ subsection.subsection_no if subsection.subsection_no else "" }}</span>
+                                                            <span class="item-name">{{ subsection.name }}</span>
+                                                        </div>
+                                                        <div class="tree-actions">
+                                                            <a href="#" class="btn-small btn-delete" title="Delete Subsection" onclick="document.getElementById('delete-subsection-form-{{ subsection.id }}').submit(); return false;">
+                                                                <i class="action-icon delete-icon">×</i> Delete
+                                                            </a>
+                                                            <form id="delete-subsection-form-{{ subsection.id }}" action="{{ url_for('hierarchy.delete_subsection', subsection_id=subsection.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this subsection?');" style="display: none;"></form>
+                                                        </div>
+                                                    </div>
+                                                    <div class="subsection-content">
+                                                        {{ subsection.content|nl2br }}
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% else %}
+                                            <div class="empty-list">
+                                                <p>No subsections added yet</p>
+                                            </div>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <div class="empty-list">
+                                        <p>No sections added yet</p>
+                                    </div>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <div class="empty-list">
+                                <p>No sets added yet</p>
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-list">
+                        <p>No chapters added yet</p>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No parts have been added to this statute yet.</p>
+            <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add First Part</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Schedule section with similar structure -->
+    <div class="statute-schedules">
+        <div class="structure-header">
+            <h3>Schedules</h3>
+            <div class="structure-controls">
+                <button type="button" class="btn-small btn-expand-all-sch">Expand All</button>
+                <button type="button" class="btn-small btn-collapse-all-sch">Collapse All</button>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" class="btn btn-primary">Add Schedule Part</a>
+        </div>
+        
+        {% if sch_parts %}
+        <div class="hierarchy-tree">
+            <ul class="sch-parts-list tree-root">
+                {% for sch_part in sch_parts %}
+                <li class="tree-node sch-part-node" data-level="sch-part" data-id="{{ sch_part.id }}">
+                    <div class="tree-item sch-part-item">
+                        <div class="tree-toggle">
+                            <i class="toggle-icon expanded">▼</i>
+                            <i class="toggle-icon collapsed">▶</i>
+                        </div>
+                        <div class="tree-content">
+                            <span class="item-label">SCHEDULE PART</span>
+                            <span class="item-number">{{ sch_part.part_no if sch_part.part_no else "" }}</span>
+                            <span class="item-name">{{ sch_part.name }}</span>
+                        </div>
+                        <div class="tree-actions">
+                            <a href="{{ url_for('schedule.add_sch_chapter', sch_part_id=sch_part.id) }}" class="btn-small btn-add" title="Add Schedule Chapter">
+                                <i class="action-icon add-icon">+</i> Add Chapter
+                            </a>
+                            <a href="#" class="btn-small btn-delete" title="Delete Schedule Part" onclick="document.getElementById('delete-sch-part-form-{{ sch_part.id }}').submit(); return false;">
+                                <i class="action-icon delete-icon">×</i> Delete
+                            </a>
+                            <form id="delete-sch-part-form-{{ sch_part.id }}" action="{{ url_for('schedule.delete_sch_part', sch_part_id=sch_part.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this schedule part and all its components?');" style="display: none;"></form>
+                        </div>
+                    </div>
+                    
+                    <!-- Schedule Chapters - Similar structure to main chapters -->
+                    {% if sch_part.sch_chapters %}
+                    <ul class="sch-chapters-list tree-children">
+                        {% for sch_chapter in sch_part.sch_chapters %}
+                        <li class="tree-node sch-chapter-node" data-level="sch-chapter" data-id="{{ sch_chapter.id }}">
+                            <!-- Similar structure for schedule chapters -->
+                            <div class="tree-item sch-chapter-item">
+                                <div class="tree-toggle">
+                                    <i class="toggle-icon expanded">▼</i>
+                                    <i class="toggle-icon collapsed">▶</i>
+                                </div>
+                                <div class="tree-content">
+                                    <span class="item-label">CHAPTER</span>
+                                    <span class="item-number">{{ sch_chapter.chapter_no if sch_chapter.chapter_no else "" }}</span>
+                                    <span class="item-name">{{ sch_chapter.name }}</span>
+                                </div>
+                                <div class="tree-actions">
+                                    <a href="{{ url_for('schedule.add_sch_set', sch_chapter_id=sch_chapter.id) }}" class="btn-small btn-add" title="Add Schedule Set">
+                                        <i class="action-icon add-icon">+</i> Add Set
+                                    </a>
+                                    <a href="#" class="btn-small btn-delete" title="Delete Schedule Chapter" onclick="document.getElementById('delete-sch-chapter-form-{{ sch_chapter.id }}').submit(); return false;">
+                                        <i class="action-icon delete-icon">×</i> Delete
+                                    </a>
+                                    <form id="delete-sch-chapter-form-{{ sch_chapter.id }}" action="{{ url_for('schedule.delete_sch_chapter', sch_chapter_id=sch_chapter.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this schedule chapter and all its components?');" style="display: none;"></form>
+                                </div>
+                            </div>
+                            
+                            <!-- Rest of Schedule hierarchy with the same pattern -->
+                            {% if sch_chapter.sch_sets %}
+                            <ul class="sch-sets-list tree-children">
+                                <!-- Similar structure for schedule sets -->
+                                {% for sch_set in sch_chapter.sch_sets %}
+                                <li class="tree-node sch-set-node" data-level="sch-set" data-id="{{ sch_set.id }}">
+                                    <!-- Set content here -->
+                                    <div class="tree-item sch-set-item">
+                                        <div class="tree-toggle">
+                                            <i class="toggle-icon expanded">▼</i>
+                                            <i class="toggle-icon collapsed">▶</i>
+                                        </div>
+                                        <div class="tree-content">
+                                            <span class="item-label">SET</span>
+                                            <span class="item-number">{{ sch_set.set_no if sch_set.set_no else "" }}</span>
+                                            <span class="item-name">{{ sch_set.name }}</span>
+                                        </div>
+                                        <div class="tree-actions">
+                                            <a href="{{ url_for('schedule.add_sch_section', sch_set_id=sch_set.id) }}" class="btn-small btn-add" title="Add Schedule Section">
+                                                <i class="action-icon add-icon">+</i> Add Section
+                                            </a>
+                                            <a href="#" class="btn-small btn-delete" title="Delete Schedule Set" onclick="document.getElementById('delete-sch-set-form-{{ sch_set.id }}').submit(); return false;">
+                                                <i class="action-icon delete-icon">×</i> Delete
+                                            </a>
+                                            <form id="delete-sch-set-form-{{ sch_set.id }}" action="{{ url_for('schedule.delete_sch_set', sch_set_id=sch_set.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this schedule set and all its components?');" style="display: none;"></form>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if sch_set.sch_sections %}
+                                    <ul class="sch-sections-list tree-children">
+                                        {% for sch_section in sch_set.sch_sections %}
+                                        <li class="tree-node sch-section-node" data-level="sch-section" data-id="{{ sch_section.id }}">
+                                            <div class="tree-item sch-section-item">
+                                                <div class="tree-toggle">
+                                                    <i class="toggle-icon expanded">▼</i>
+                                                    <i class="toggle-icon collapsed">▶</i>
+                                                </div>
+                                                <div class="tree-content">
+                                                    <span class="item-label">SECTION</span>
+                                                    <span class="item-number">{{ sch_section.section_no if sch_section.section_no else "" }}</span>
+                                                    <span class="item-name">{{ sch_section.name }}</span>
+                                                </div>
+                                                <div class="tree-actions">
+                                                    <a href="{{ url_for('schedule.add_sch_subsection', sch_section_id=sch_section.id) }}" class="btn-small btn-add" title="Add Schedule Subsection">
+                                                        <i class="action-icon add-icon">+</i> Add Subsection
+                                                    </a>
+                                                    <a href="#" class="btn-small btn-delete" title="Delete Schedule Section" onclick="document.getElementById('delete-sch-section-form-{{ sch_section.id }}').submit(); return false;">
+                                                        <i class="action-icon delete-icon">×</i> Delete
+                                                    </a>
+                                                    <form id="delete-sch-section-form-{{ sch_section.id }}" action="{{ url_for('schedule.delete_sch_section', sch_section_id=sch_section.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this schedule section and all its subsections?');" style="display: none;"></form>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if sch_section.sch_subsections %}
+                                            <ul class="sch-subsections-list tree-children">
+                                                {% for sch_subsection in sch_section.sch_subsections %}
+                                                <li class="tree-node sch-subsection-node leaf-node" data-level="sch-subsection" data-id="{{ sch_subsection.id }}">
+                                                    <div class="tree-item sch-subsection-item">
+                                                        <div class="tree-leaf-spacer"></div>
+                                                        <div class="tree-content">
+                                                            <span class="item-label">SUBSECTION</span>
+                                                            <span class="item-number">{{ sch_subsection.subsection_no if sch_subsection.subsection_no else "" }}</span>
+                                                            <span class="item-name">{{ sch_subsection.name }}</span>
+                                                        </div>
+                                                        <div class="tree-actions">
+                                                            <a href="#" class="btn-small btn-delete" title="Delete Schedule Subsection" onclick="document.getElementById('delete-sch-subsection-form-{{ sch_subsection.id }}').submit(); return false;">
+                                                                <i class="action-icon delete-icon">×</i> Delete
+                                                            </a>
+                                                            <form id="delete-sch-subsection-form-{{ sch_subsection.id }}" action="{{ url_for('schedule.delete_sch_subsection', sch_subsection_id=sch_subsection.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this schedule subsection?');" style="display: none;"></form>
+                                                        </div>
+                                                    </div>
+                                                    <div class="sch-subsection-content">
+                                                        {{ sch_subsection.content|nl2br }}
+                                                    </div>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% else %}
+                                            <div class="empty-list">
+                                                <p>No subsections added yet</p>
+                                            </div>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <div class="empty-list">
+                                        <p>No sections added yet</p>
+                                    </div>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <div class="empty-list">
+                                <p>No sets added yet</p>
+                            </div>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-list">
+                        <p>No chapters added yet</p>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No schedule parts have been added to this statute yet.</p>
+            <a href="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" class="btn btn-primary">Add First Schedule Part</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize collapsible tree items
+        initTreeToggles();
+        
+        // Initialize expand/collapse all buttons
+        initExpandCollapseButtons();
+    });
+    
+    function initTreeToggles() {
+        // Get all toggle elements
+        const toggles = document.querySelectorAll('.tree-toggle');
+        
+        // Add click event listener to each toggle
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+                
+                // Find the parent node
+                const node = this.closest('.tree-node');
+                
+                // Toggle expanded/collapsed state
+                if (node.classList.contains('collapsed')) {
+                    expandNodeWithChildren(node);
+                } else {
+                    collapseNodeWithChildren(node);
+                }
+            });
+        });
+        
+        // Set initial state (all expanded)
+        document.querySelectorAll('.tree-node').forEach(node => {
+            // Don't collapse leaf nodes
+            if (!node.classList.contains('leaf-node')) {
+                // Initially all nodes are expanded
+                node.classList.remove('collapsed');
+                node.classList.add('expanded');
+            }
+        });
+    }
+    
+    function initExpandCollapseButtons() {
+        // Regular structure expand/collapse buttons
+        const expandAllBtn = document.querySelector('.btn-expand-all');
+        const collapseAllBtn = document.querySelector('.btn-collapse-all');
+        
+        if (expandAllBtn) {
+            expandAllBtn.addEventListener('click', function() {
+                const rootNodes = document.querySelector('.statute-structure').querySelectorAll('.tree-root > .tree-node');
+                rootNodes.forEach(node => expandNodeWithChildren(node));
+            });
+        }
+        
+        if (collapseAllBtn) {
+            collapseAllBtn.addEventListener('click', function() {
+                const rootNodes = document.querySelector('.statute-structure').querySelectorAll('.tree-root > .tree-node');
+                rootNodes.forEach(node => collapseNodeWithChildren(node));
+            });
+        }
+        
+        // Schedule structure expand/collapse buttons
+        const expandAllSchBtn = document.querySelector('.btn-expand-all-sch');
+        const collapseAllSchBtn = document.querySelector('.btn-collapse-all-sch');
+        
+        if (expandAllSchBtn) {
+            expandAllSchBtn.addEventListener('click', function() {
+                const rootNodes = document.querySelector('.statute-schedules').querySelectorAll('.tree-root > .tree-node');
+                rootNodes.forEach(node => expandNodeWithChildren(node));
+            });
+        }
+        
+        if (collapseAllSchBtn) {
+            collapseAllSchBtn.addEventListener('click', function() {
+                const rootNodes = document.querySelector('.statute-schedules').querySelectorAll('.tree-root > .tree-node');
+                rootNodes.forEach(node => collapseNodeWithChildren(node));
+            });
+        }
+    }
+    
+    // New improved functions to handle nested collapse/expand
+    function expandNodeWithChildren(node) {
+        // First expand this node
+        node.classList.remove('collapsed');
+        node.classList.add('expanded');
+        
+        // Then expand all child nodes recursively
+        const childNodes = node.querySelectorAll(':scope > .tree-children > .tree-node:not(.leaf-node)');
+        childNodes.forEach(childNode => {
+            expandNodeWithChildren(childNode);
+        });
+    }
+    
+    function collapseNodeWithChildren(node) {
+        // First collapse this node
+        node.classList.remove('expanded');
+        node.classList.add('collapsed');
+        
+        // Then collapse all child nodes recursively
+        const childNodes = node.querySelectorAll(':scope > .tree-children > .tree-node:not(.leaf-node)');
+        childNodes.forEach(childNode => {
+            collapseNodeWithChildren(childNode);
+        });
+    }
+</script>
+{% endblock %}

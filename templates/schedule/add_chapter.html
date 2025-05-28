@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Schedule Chapter{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=sch_part.statute_id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <a href="#" onclick="history.back(); return false;">{{ sch_part.name }}</a>
+        <span class="separator">/</span>
+        <span>Add Schedule Chapter</span>
+    </div>
+
+    <h2>Add Schedule Chapter to {{ sch_part.name }}</h2>
+    
+    <form method="POST"
+    action="{{ url_for('schedule.add_sch_chapter', sch_part_id=sch_part.id) }}"
+    id="schChapterForm">
+  {{ form.csrf_token }}
+  
+  <div class="form-group">
+      <label for="name">Name <span class="required">*</span></label>
+      {{ form.name(class="form-control", required=true) }}
+      {% if form.name.errors %}
+          <div class="error-message">{{ form.name.errors[0] }}</div>
+      {% endif %}
+  </div>
+  
+  <div class="form-group">
+      <label for="chapter_no">Chapter Number</label>
+      {{ form.chapter_no(class="form-control") }}
+      {% if form.chapter_no.errors %}
+          <div class="error-message">{{ form.chapter_no.errors[0] }}</div>
+      {% endif %}
+  </div>
+  
+  <!-- Hidden order number field, calculated automatically -->
+  {{ form.order_no(type="hidden") }}
+  
+  <!-- Hidden action field to store the button action -->
+  <input type="hidden" name="action" id="form-action" value="save">
+  
+  <div class="form-actions">
+      <button type="button"
+              onclick="submitForm('save')"
+              class="btn btn-primary">Save Schedule Chapter</button>
+      <button type="button"
+              onclick="submitForm('save_add_another')"
+              class="btn btn-secondary">Save &amp; Add Another Chapter</button>
+      <button type="button"
+              onclick="submitForm('save_add_set')"
+              class="btn btn-secondary">Save &amp; Add Set</button>
+      <a href="{{ url_for('statute.view_statute', statute_id=sch_part.statute_id) }}"
+         class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+
+<script>
+  function submitForm(action) {
+      // Set the action value in the hidden field
+      document.getElementById('form-action').value = action;
+      // Submit the form
+      document.getElementById('schChapterForm').submit();
+  }
+</script>
+
+</div>
+{% endblock %}

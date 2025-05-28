@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Schedule Part{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <span>Add Schedule Part</span>
+    </div>
+
+    <h2>Add Schedule Part to {{ statute.name }}</h2>
+    
+    <form method="POST" action="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" id="schPartForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            {{ form.name(class="form-control", required=true) }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="part_no">Part Number</label>
+            {{ form.part_no(class="form-control") }}
+            {% if form.part_no.errors %}
+                <div class="error-message">{{ form.part_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Hidden order number field, calculated automatically -->
+        {{ form.order_no(type="hidden") }}
+        
+        <!-- Hidden action field to store the button action -->
+        <input type="hidden" name="action" id="form-action" value="save">
+        
+        <div class="form-actions">
+            <button type="button" onclick="submitForm('save')" class="btn btn-primary">Save Schedule Part</button>
+            <button type="button" onclick="submitForm('save_add_another')" class="btn btn-secondary">Save & Add Another Part</button>
+            <button type="button" onclick="submitForm('save_add_chapter')" class="btn btn-secondary">Save & Add Chapter</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+</form>
+
+<script>
+    function submitForm(action) {
+        // Set the action value in the hidden field
+        document.getElementById('form-action').value = action;
+        // Submit the form
+        document.getElementById('schPartForm').submit();
+    }
+</script>
+
+</div>
+{% endblock %}

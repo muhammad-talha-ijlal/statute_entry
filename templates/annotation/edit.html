@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {% if statute %}
+        Annotations for {{ statute.name }}
+    {% else %}
+        All Annotations
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="annotations-list-container">
+    <div class="header-with-actions">
+        {% if statute %}
+            <div class="breadcrumb">
+                <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+                <span class="separator">/</span>
+                <span>Annotations</span>
+            </div>
+            <h2>Annotations for {{ statute.name }}</h2>
+            <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id) }}" class="btn btn-primary">Add New Annotation</a>
+        {% else %}
+            <h2>All Annotations</h2>
+        {% endif %}
+    </div>
+    
+    <div class="search-container">
+        <form action="{% if statute %}{{ url_for('annotation.list_statute_annotations', statute_id=statute.id) }}{% else %}{{ url_for('annotation.list_annotations') }}{% endif %}" method="get">
+            <input type="text" name="search" placeholder="Search annotations..." value="{{ search if search else '' }}">
+            <button type="submit" class="btn btn-search">Search</button>
+            {% if search %}
+            <a href="{% if statute %}{{ url_for('annotation.list_statute_annotations', statute_id=statute.id) }}{% else %}{{ url_for('annotation.list_annotations') }}{% endif %}" class="btn btn-clear">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    {% if annotations.items %}
+    <table class="annotations-table">
+        <thead>
+            <tr>
+                <th>Annotation Number</th>
+                <th>Page Number</th>
+                <th>Footnote</th>
+                {% if not statute %}
+                <th>Statute</th>
+                {% endif %}
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for annotation in annotations.items %}
+            <tr>
+                <td>{{ annotation.no }}</td>
+                <td>{{ annotation.page_no if annotation.page_no else "-" }}</td>
+                <td class="footnote-cell">{{ annotation.footnote|truncate(100) }}</td>
+                {% if not statute %}
+                <td>
+                    {% if annotation.statute %}
+                    <a href="{{ url_for('statute.view_statute', statute_id=annotation.statute.id) }}">
+                        {{ annotation.statute.name }}
+                    </a>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+                {% endif %}
+                <td>{{ annotation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('annotation.edit_annotation', annotation_id=annotation.id) }}" class="btn-small">Edit</a>
+                    <form action="{{ url_for('annotation.delete_annotation', annotation_id=annotation.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this annotation?');">
+                        <button type="submit" class="btn-small btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Pagination controls -->
+    <div class="pagination">
+        {% if annotations.has_prev %}
+        <a href="{% if statute %}{{ url_for('annotation.list_statute_annotations', statute_id=statute.id, page=annotations.prev_num, search=search) }}{% else %}{{ url_for('annotation.list_annotations', page=annotations.prev_num, search=search) }}{% endif %}" class="pagination-button">&laquo; Previous</a>
+        {% endif %}
+        
+        {% for page_num in annotations.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == annotations.page %}
+                <span class="pagination-current">{{ page_num }}</span>
+                {% else %}
+                <a href="{% if statute %}{{ url_for('annotation.list_statute_annotations', statute_id=statute.id, page=page_num, search=search) }}{% else %}{{ url_for('annotation.list_annotations', page=page_num, search=search) }}{% endif %}" class="pagination-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span class="pagination-ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if annotations.has_next %}
+        <a href="{% if statute %}{{ url_for('annotation.list_statute_annotations', statute_id=statute.id, page=annotations.next_num, search=search) }}{% else %}{{ url_for('annotation.list_annotations', page=annotations.next_num, search=search) }}{% endif %}" class="pagination-button">Next &raquo;</a>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No annotations found.</p>
+        {% if statute %}
+        <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id) }}" class="btn btn-primary">Add Your First Annotation</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

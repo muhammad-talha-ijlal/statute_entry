@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}Add Subsection{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=section.set.chapter.part.statute_id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <a href="#" onclick="history.back(); return false;">{{ section.set.chapter.part.name }}</a>
+        <span class="separator">/</span>
+        <a href="#" onclick="history.back(); return false;">{{ section.set.chapter.name }}</a>
+        <span class="separator">/</span>
+        <a href="#" onclick="history.back(); return false;">{{ section.set.name }}</a>
+        <span class="separator">/</span>
+        <a href="#" onclick="history.back(); return false;">{{ section.name }}</a>
+        <span class="separator">/</span>
+        <span>Add Subsection</span>
+    </div>
+
+    <h2>Add Subsection to {{ section.name }}</h2>
+    
+    <form method="POST" action="{{ url_for('hierarchy.add_subsection', section_id=section.id) }}" id="subsectionForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name</label>
+            {{ form.name(class="form-control") }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="subsection_no">Subsection Number</label>
+            {{ form.subsection_no(class="form-control") }}
+            {% if form.subsection_no.errors %}
+                <div class="error-message">{{ form.subsection_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="content">Content <span class="required">*</span></label>
+            {{ form.content(class="form-control", rows=10, required=true) }}
+            {% if form.content.errors %}
+                <div class="error-message">{{ form.content.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <!-- Hidden order number field, calculated automatically -->
+        {{ form.order_no(type="hidden") }}
+        
+        <!-- Hidden action field to store the button action -->
+        <input type="hidden" name="action" id="form-action" value="save">
+        
+        <div class="form-actions">
+            <button type="button" onclick="submitForm('save')" class="btn btn-primary">Save Subsection</button>
+            <button type="button" onclick="submitForm('save_add_another')" class="btn btn-secondary">Save & Add Another Subsection</button>
+            <button type="button" onclick="submitForm('save_add_section')" class="btn btn-secondary">Save & Add New Section</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=section.set.chapter.part.statute_id) }}" class="btn btn-outline">Cancel</a>
+        </div>
+    </form>
+
+<script>
+    function submitForm(action) {
+        // Set the action value in the hidden field
+        document.getElementById('form-action').value = action;
+        // Submit the form
+        document.getElementById('subsectionForm').submit();
+    }
+</script>
+</div>
+{% endblock %}
