@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Chapter{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ part.name }}</a>
+        <span class="separator">/</span>
+        <span>Edit {{ chapter.name }}</span>
+    </div>
+
+    <h2>Edit Chapter: {{ chapter.name }}</h2>
+    
+    <form method="POST" action="{{ url_for('hierarchy.edit_chapter', chapter_id=chapter.id) }}" id="editChapterForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            {{ form.name(class="form-control", required=true) }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="chapter_no">Chapter Number</label>
+            {{ form.chapter_no(class="form-control") }}
+            {% if form.chapter_no.errors %}
+                <div class="error-message">{{ form.chapter_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Chapter</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editChapterForm');
+        
+        form.addEventListener('submit', function(e) {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Updating...';
+            
+            setTimeout(() => {
+                if (submitButton.disabled) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Update Chapter';
+                }
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

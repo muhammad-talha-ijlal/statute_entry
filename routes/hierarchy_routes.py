@@ -468,6 +468,53 @@ def add_section(set_id):
         current_app.logger.error(f"Error adding section: {str(e)}")
         flash("An error occurred while adding the section.", "danger")
         return redirect(url_for('statute.list_statutes'))
+
+@hierarchy_bp.route('/section/<int:section_id>/edit', methods=['GET', 'POST'])
+def edit_section(section_id):
+    """Edit an existing section"""
+    try:
+        # Get the section
+        section = db.session.query(Section).filter(Section.id == section_id).first()
+        if not section:
+            flash("Section not found.", "danger")
+            return redirect(url_for('statute.list_statutes'))
+        
+        # Get the set, chapter, part and statute for breadcrumb
+        set_item = db.session.query(Set).filter(Set.id == section.set_id).first()
+        chapter = db.session.query(Chapter).filter(Chapter.id == set_item.chapter_id).first()
+        part = db.session.query(Part).filter(Part.id == chapter.part_id).first()
+        statute = db.session.query(Statute).filter(Statute.id == part.statute_id).first()
+        
+        # Create form and populate with existing data
+        form = SectionForm(obj=section)
+        
+        if request.method == 'POST' and form.validate_on_submit():
+            # Update section
+            section.name = form.name.data
+            section.section_no = form.section_no.data
+            section.updated_at = datetime.now(pytz.UTC)
+            
+            # Save the changes
+            success, message = save_with_transaction(section)
+            if success:
+                flash(f"Section '{section.name}' updated successfully.", "success")
+                return redirect(url_for('statute.view_statute', statute_id=part.statute_id))
+            else:
+                flash(message, "danger")
+        
+        return render_template(
+            'hierarchy/edit_section.html', 
+            form=form, 
+            section=section,
+            set=set_item,
+            chapter=chapter,
+            part=part,
+            statute=statute
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error editing section: {str(e)}")
+        flash("An error occurred while editing the section.", "danger")
+        return redirect(url_for('statute.list_statutes'))
     
 @hierarchy_bp.route('/section/<int:section_id>/delete', methods=['POST'])
 def delete_section(section_id):
@@ -565,6 +612,56 @@ def add_subsection(section_id):
     except Exception as e:
         current_app.logger.error(f"Error adding subsection: {str(e)}")
         flash("An error occurred while adding the subsection.", "danger")
+        return redirect(url_for('statute.list_statutes'))
+
+@hierarchy_bp.route('/subsection/<int:subsection_id>/edit', methods=['GET', 'POST'])
+def edit_subsection(subsection_id):
+    """Edit an existing subsection"""
+    try:
+        # Get the subsection
+        subsection = db.session.query(Subsection).filter(Subsection.id == subsection_id).first()
+        if not subsection:
+            flash("Subsection not found.", "danger")
+            return redirect(url_for('statute.list_statutes'))
+        
+        # Get the section, set, chapter, part and statute for breadcrumb
+        section = db.session.query(Section).filter(Section.id == subsection.section_id).first()
+        set_item = db.session.query(Set).filter(Set.id == section.set_id).first()
+        chapter = db.session.query(Chapter).filter(Chapter.id == set_item.chapter_id).first()
+        part = db.session.query(Part).filter(Part.id == chapter.part_id).first()
+        statute = db.session.query(Statute).filter(Statute.id == part.statute_id).first()
+        
+        # Create form and populate with existing data
+        form = SubsectionForm(obj=subsection)
+        
+        if request.method == 'POST' and form.validate_on_submit():
+            # Update subsection
+            subsection.name = form.name.data
+            subsection.subsection_no = form.subsection_no.data
+            subsection.content = form.content.data
+            subsection.updated_at = datetime.now(pytz.UTC)
+            
+            # Save the changes
+            success, message = save_with_transaction(subsection)
+            if success:
+                flash(f"Subsection '{subsection.name}' updated successfully.", "success")
+                return redirect(url_for('statute.view_statute', statute_id=part.statute_id))
+            else:
+                flash(message, "danger")
+        
+        return render_template(
+            'hierarchy/edit_subsection.html', 
+            form=form, 
+            subsection=subsection,
+            section=section,
+            set=set_item,
+            chapter=chapter,
+            part=part,
+            statute=statute
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error editing subsection: {str(e)}")
+        flash("An error occurred while editing the subsection.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/subsection/<int:subsection_id>/delete', methods=['POST'])

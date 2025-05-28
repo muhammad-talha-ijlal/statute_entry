@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Subsection{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ part.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ chapter.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ set.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ section.name }}</a>
+        <span class="separator">/</span>
+        <span>Edit {{ subsection.name if subsection.name else 'Subsection' }}</span>
+    </div>
+
+    <h2>Edit Subsection: {{ subsection.name if subsection.name else '' }}</h2>
+    
+    <form method="POST" action="{{ url_for('hierarchy.edit_subsection', subsection_id=subsection.id) }}" id="editSubsectionForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name</label>
+            {{ form.name(class="form-control") }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="subsection_no">Subsection Number</label>
+            {{ form.subsection_no(class="form-control") }}
+            {% if form.subsection_no.errors %}
+                <div class="error-message">{{ form.subsection_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="content">Content <span class="required">*</span></label>
+            {{ form.content(class="form-control", rows=10, required=true) }}
+            {% if form.content.errors %}
+                <div class="error-message">{{ form.content.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Subsection</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editSubsectionForm');
+        
+        form.addEventListener('submit', function(e) {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Updating...';
+            
+            setTimeout(() => {
+                if (submitButton.disabled) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Update Subsection';
+                }
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

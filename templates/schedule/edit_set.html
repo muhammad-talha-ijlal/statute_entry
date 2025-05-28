@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Schedule Set{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="breadcrumb">
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ statute.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ sch_part.name }}</a>
+        <span class="separator">/</span>
+        <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">{{ sch_chapter.name }}</a>
+        <span class="separator">/</span>
+        <span>Edit {{ sch_set.name }}</span>
+    </div>
+
+    <h2>Edit Schedule Set: {{ sch_set.name }}</h2>
+    
+    <form method="POST" action="{{ url_for('schedule.edit_sch_set', sch_set_id=sch_set.id) }}" id="editSchSetForm">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            <label for="name">Name <span class="required">*</span></label>
+            {{ form.name(class="form-control", required=true) }}
+            {% if form.name.errors %}
+                <div class="error-message">{{ form.name.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="set_no">Set Number</label>
+            {{ form.set_no(class="form-control") }}
+            {% if form.set_no.errors %}
+                <div class="error-message">{{ form.set_no.errors[0] }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Update Schedule Set</button>
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editSchSetForm');
+        
+        form.addEventListener('submit', function(e) {
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerText = 'Updating...';
+            
+            setTimeout(() => {
+                if (submitButton.disabled) {
+                    submitButton.disabled = false;
+                    submitButton.innerText = 'Update Schedule Set';
+                }
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

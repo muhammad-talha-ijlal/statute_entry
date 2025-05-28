@@ -33,10 +33,24 @@ def list_statutes():
         # Order by recently updated
         query = query.order_by(Statute.updated_at.desc())
         
-        # Paginate results
-        statutes = query.paginate(page=page, per_page=per_page)
+        # Paginate results - using error_out=False to prevent 404 on invalid page
+        statutes = query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        # If no results and page > 1, redirect to page 1
+        if not statutes.items and page > 1:
+            return redirect(url_for('statute.list_statutes', search=search))
         
         return render_template('statute/list.html', statutes=statutes, search=search)
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error listing statutes: {str(e)}")
+        flash("A database error occurred while retrieving statutes.", "danger")
+        return redirect(url_for('index'))
     except Exception as e:
         current_app.logger.error(f"Error listing statutes: {str(e)}")
         flash("An error occurred while retrieving statutes.", "danger")
@@ -51,6 +65,7 @@ def add_statute():
         try:
             # Check if statute with same name already exists
             existing = check_exists(Statute, name=form.name.data)
+            print(existing, '=======================================')
             if existing:
                 flash(f"A statute with the name '{form.name.data}' already exists.", "danger")
                 return render_template('statute/add.html', form=form)
@@ -79,6 +94,11 @@ def add_statute():
                     return redirect(url_for('statute.view_statute', statute_id=statute.id))
             else:
                 flash(message, "danger")
+                
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            current_app.logger.error(f"Database error adding statute: {str(e)}")
+            flash("A database error occurred while creating the statute.", "danger")
         except Exception as e:
             current_app.logger.error(f"Error adding statute: {str(e)}")
             flash("An error occurred while creating the statute.", "danger")
@@ -98,8 +118,6 @@ def view_statute(statute_id):
         
         # Get the full hierarchy for this statute
         hierarchy = get_full_hierarchy(statute_id)
-        from pprint import pprint
-        pprint(hierarchy)
         
         return render_template(
             'statute/view.html', 
@@ -107,6 +125,12 @@ def view_statute(statute_id):
             parts=hierarchy.get('parts', []) if hierarchy else [],
             sch_parts=hierarchy.get('sch_parts', []) if hierarchy else []
         )
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error viewing statute: {str(e)}")
+        flash("A database error occurred while retrieving the statute.", "danger")
+        return redirect(url_for('statute.list_statutes'))
     except Exception as e:
         current_app.logger.error(f"Error viewing statute: {str(e)}")
         flash("An error occurred while retrieving the statute.", "danger")
@@ -151,6 +175,12 @@ def edit_statute(statute_id):
                 flash(message, "danger")
         
         return render_template('statute/edit.html', form=form, statute=statute)
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error editing statute: {str(e)}")
+        flash("A database error occurred while editing the statute.", "danger")
+        return redirect(url_for('statute.list_statutes'))
     except Exception as e:
         current_app.logger.error(f"Error editing statute: {str(e)}")
         flash("An error occurred while editing the statute.", "danger")
@@ -176,6 +206,7 @@ def delete_statute(statute_id):
         
         flash(f"Statute '{statute_name}' and all its components have been deleted.", "success")
         return redirect(url_for('statute.list_statutes'))
+        
     except SQLAlchemyError as e:
         db.session.rollback()
         current_app.logger.error(f"Database error deleting statute: {str(e)}")

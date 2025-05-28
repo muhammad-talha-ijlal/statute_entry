@@ -60,6 +60,9 @@
                             <a href="{{ url_for('hierarchy.add_chapter', part_id=part.id) }}" class="btn-small btn-add" title="Add Chapter">
                                 <i class="action-icon add-icon">+</i> Add Chapter
                             </a>
+                            <a href="{{ url_for('hierarchy.edit_part', part_id=part.id) }}" class="btn-small btn-secondary" title="Edit Part">
+                                <i class="action-icon edit-icon">✎</i> Edit
+                            </a>
                             <a href="#" class="btn-small btn-delete" title="Delete Part" onclick="document.getElementById('delete-part-form-{{ part.id }}').submit(); return false;">
                                 <i class="action-icon delete-icon">×</i> Delete
                             </a>
@@ -84,6 +87,9 @@
                                 <div class="tree-actions">
                                     <a href="{{ url_for('hierarchy.add_set', chapter_id=chapter.id) }}" class="btn-small btn-add" title="Add Set">
                                         <i class="action-icon add-icon">+</i> Add Set
+                                    </a>
+                                    <a href="{{ url_for('hierarchy.edit_chapter', chapter_id=chapter.id) }}" class="btn-small btn-secondary" title="Edit Chapter">
+                                        <i class="action-icon edit-icon">✎</i> Edit
                                     </a>
                                     <a href="#" class="btn-small btn-delete" title="Delete Chapter" onclick="document.getElementById('delete-chapter-form-{{ chapter.id }}').submit(); return false;">
                                         <i class="action-icon delete-icon">×</i> Delete
@@ -110,6 +116,9 @@
                                             <a href="{{ url_for('hierarchy.add_section', set_id=set.id) }}" class="btn-small btn-add" title="Add Section">
                                                 <i class="action-icon add-icon">+</i> Add Section
                                             </a>
+                                            <a href="{{ url_for('hierarchy.edit_set', set_id=set.id) }}" class="btn-small btn-secondary" title="Edit Set">
+                                                <i class="action-icon edit-icon">✎</i> Edit
+                                            </a>
                                             <a href="#" class="btn-small btn-delete" title="Delete Set" onclick="document.getElementById('delete-set-form-{{ set.id }}').submit(); return false;">
                                                 <i class="action-icon delete-icon">×</i> Delete
                                             </a>
@@ -135,6 +144,9 @@
                                                     <a href="{{ url_for('hierarchy.add_subsection', section_id=section.id) }}" class="btn-small btn-add" title="Add Subsection">
                                                         <i class="action-icon add-icon">+</i> Add Subsection
                                                     </a>
+                                                    <a href="{{ url_for('hierarchy.edit_section', section_id=section.id) }}" class="btn-small btn-secondary" title="Edit Section">
+                                                        <i class="action-icon edit-icon">✎</i> Edit
+                                                    </a>
                                                     <a href="#" class="btn-small btn-delete" title="Delete Section" onclick="document.getElementById('delete-section-form-{{ section.id }}').submit(); return false;">
                                                         <i class="action-icon delete-icon">×</i> Delete
                                                     </a>
@@ -151,9 +163,12 @@
                                                         <div class="tree-content">
                                                             <span class="item-label">SUBSECTION</span>
                                                             <span class="item-number">{{ subsection.subsection_no if subsection.subsection_no else "" }}</span>
-                                                            <span class="item-name">{{ subsection.name }}</span>
+                                                            <span class="item-name">{{ subsection.name if subsection.name else "" }}</span>
                                                         </div>
                                                         <div class="tree-actions">
+                                                            <a href="{{ url_for('hierarchy.edit_subsection', subsection_id=subsection.id) }}" class="btn-small btn-secondary" title="Edit Subsection">
+                                                                <i class="action-icon edit-icon">✎</i> Edit
+                                                            </a>
                                                             <a href="#" class="btn-small btn-delete" title="Delete Subsection" onclick="document.getElementById('delete-subsection-form-{{ subsection.id }}').submit(); return false;">
                                                                 <i class="action-icon delete-icon">×</i> Delete
                                                             </a>
@@ -240,6 +255,9 @@
                             <a href="{{ url_for('schedule.add_sch_chapter', sch_part_id=sch_part.id) }}" class="btn-small btn-add" title="Add Schedule Chapter">
                                 <i class="action-icon add-icon">+</i> Add Chapter
                             </a>
+                            <a href="{{ url_for('schedule.edit_sch_part', sch_part_id=sch_part.id) }}" class="btn-small btn-secondary" title="Edit Schedule Part">
+                                <i class="action-icon edit-icon">✎</i> Edit
+                            </a>
                             <a href="#" class="btn-small btn-delete" title="Delete Schedule Part" onclick="document.getElementById('delete-sch-part-form-{{ sch_part.id }}').submit(); return false;">
                                 <i class="action-icon delete-icon">×</i> Delete
                             </a>
@@ -266,6 +284,9 @@
                                 <div class="tree-actions">
                                     <a href="{{ url_for('schedule.add_sch_set', sch_chapter_id=sch_chapter.id) }}" class="btn-small btn-add" title="Add Schedule Set">
                                         <i class="action-icon add-icon">+</i> Add Set
+                                    </a>
+                                    <a href="{{ url_for('schedule.edit_sch_chapter', sch_chapter_id=sch_chapter.id) }}" class="btn-small btn-secondary" title="Edit Schedule Chapter">
+                                        <i class="action-icon edit-icon">✎</i> Edit
                                     </a>
                                     <a href="#" class="btn-small btn-delete" title="Delete Schedule Chapter" onclick="document.getElementById('delete-sch-chapter-form-{{ sch_chapter.id }}').submit(); return false;">
                                         <i class="action-icon delete-icon">×</i> Delete
@@ -295,6 +316,9 @@
                                             <a href="{{ url_for('schedule.add_sch_section', sch_set_id=sch_set.id) }}" class="btn-small btn-add" title="Add Schedule Section">
                                                 <i class="action-icon add-icon">+</i> Add Section
                                             </a>
+                                            <a href="{{ url_for('schedule.edit_sch_set', sch_set_id=sch_set.id) }}" class="btn-small btn-secondary" title="Edit Schedule Set">
+                                                <i class="action-icon edit-icon">✎</i> Edit
+                                            </a>
                                             <a href="#" class="btn-small btn-delete" title="Delete Schedule Set" onclick="document.getElementById('delete-sch-set-form-{{ sch_set.id }}').submit(); return false;">
                                                 <i class="action-icon delete-icon">×</i> Delete
                                             </a>
@@ -320,6 +344,9 @@
                                                     <a href="{{ url_for('schedule.add_sch_subsection', sch_section_id=sch_section.id) }}" class="btn-small btn-add" title="Add Schedule Subsection">
                                                         <i class="action-icon add-icon">+</i> Add Subsection
                                                     </a>
+                                                    <a href="{{ url_for('schedule.edit_sch_section', sch_section_id=sch_section.id) }}" class="btn-small btn-secondary" title="Edit Schedule Section">
+                                                        <i class="action-icon edit-icon">✎</i> Edit
+                                                    </a>
                                                     <a href="#" class="btn-small btn-delete" title="Delete Schedule Section" onclick="document.getElementById('delete-sch-section-form-{{ sch_section.id }}').submit(); return false;">
                                                         <i class="action-icon delete-icon">×</i> Delete
                                                     </a>
@@ -336,9 +363,12 @@
                                                         <div class="tree-content">
                                                             <span class="item-label">SUBSECTION</span>
                                                             <span class="item-number">{{ sch_subsection.subsection_no if sch_subsection.subsection_no else "" }}</span>
-                                                            <span class="item-name">{{ sch_subsection.name }}</span>
+                                                            <span class="item-name">{{ sch_subsection.name if sch_subsection.name else "" }}</span>
                                                         </div>
                                                         <div class="tree-actions">
+                                                            <a href="{{ url_for('schedule.edit_sch_subsection', sch_subsection_id=sch_subsection.id) }}" class="btn-small btn-secondary" title="Edit Schedule Subsection">
+                                                                <i class="action-icon edit-icon">✎</i> Edit
+                                                            </a>
                                                             <a href="#" class="btn-small btn-delete" title="Delete Schedule Subsection" onclick="document.getElementById('delete-sch-subsection-form-{{ sch_subsection.id }}').submit(); return false;">
                                                                 <i class="action-icon delete-icon">×</i> Delete
                                                             </a>

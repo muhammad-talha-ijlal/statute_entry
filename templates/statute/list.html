@@ -19,7 +19,7 @@
         </form>
     </div>
     
-    {% if statutes %}
+    {% if statutes.items %}
     <table class="statutes-table">
         <thead>
             <tr>
@@ -31,7 +31,7 @@
             </tr>
         </thead>
         <tbody>
-            {% for statute in statutes %}
+            {% for statute in statutes.items %}
             <tr>
                 <td>
                     <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}">
@@ -53,9 +53,30 @@
         </tbody>
     </table>
     
+    <!-- Pagination controls -->
+    {% if statutes.pages > 1 %}
     <div class="pagination">
-        <!-- Pagination controls would go here -->
+        {% if statutes.has_prev %}
+        <a href="{{ url_for('statute.list_statutes', page=statutes.prev_num, search=search) }}" class="pagination-button">&laquo; Previous</a>
+        {% endif %}
+        
+        {% for page_num in statutes.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == statutes.page %}
+                <span class="pagination-current">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('statute.list_statutes', page=page_num, search=search) }}" class="pagination-link">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+            <span class="pagination-ellipsis">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if statutes.has_next %}
+        <a href="{{ url_for('statute.list_statutes', page=statutes.next_num, search=search) }}" class="pagination-button">Next &raquo;</a>
+        {% endif %}
     </div>
+    {% endif %}
     {% else %}
     <div class="empty-state">
         <p>No statutes found.</p>
