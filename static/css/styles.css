@@ -1121,7 +1121,117 @@ footer {
     text-align: center;
     color: #777;
 }
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2rem 0;
+    gap: 0.5rem;
+}
 
+.pagination-button,
+.pagination-link {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ddd;
+    color: #3498db;
+    text-decoration: none;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.pagination-button:hover,
+.pagination-link:hover {
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+}
+
+.pagination-current {
+    padding: 0.5rem 0.75rem;
+    background-color: #3498db;
+    color: white;
+    border: 1px solid #3498db;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.pagination-ellipsis {
+    padding: 0.5rem 0.25rem;
+    color: #777;
+}
+
+.pagination-info {
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* Table Styling */
+.annotations-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.annotations-table th,
+.annotations-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.annotations-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.annotations-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.footnote-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.actions {
+    white-space: nowrap;
+}
+
+.actions .btn {
+    margin-right: 0.5rem;
+}
+
+.actions .inline-form {
+    display: inline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .annotations-table {
+        font-size: 0.9rem;
+    }
+    
+    .footnote-cell {
+        max-width: 200px;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+    
+    .pagination-button,
+    .pagination-link,
+    .pagination-current {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.9rem;
+    }
+}
 /* Statute sections spacing */
 .statute-structure,
 .statute-schedules {

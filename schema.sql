@@ -79,9 +79,12 @@ CREATE TABLE annotation (
     id SERIAL PRIMARY KEY,
     no TEXT NOT NULL,
     page_no TEXT,
+    statute_id INTEGER,
     footnote TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_annotation_statute FOREIGN KEY (statute_id) REFERENCES statute(id) ON DELETE CASCADE,
+    CONSTRAINT uq_annotation_statute_no UNIQUE (statute_id, no)
 );
 
 -- Create schedule part table
