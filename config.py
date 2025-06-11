@@ -11,8 +11,18 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
     
     # SQLAlchemy settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///legal_text.db'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # PostgreSQL connection pool settings for Gunicorn
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 10,
+        'pool_recycle': 3600,  # Recycle connections every hour
+        'pool_pre_ping': True,  # Validate connections before use
+        'max_overflow': 20,
+        'pool_timeout': 30,
+        'echo': False  # Set to True for debugging SQL queries
+    }
     
     # Debug mode (disable in production)
     DEBUG = os.environ.get('FLASK_DEBUG', 'True').lower() in ('true', '1', 't')

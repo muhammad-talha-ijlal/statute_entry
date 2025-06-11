@@ -1,8 +1,10 @@
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError, DisconnectionError, OperationalError
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from flask import current_app
 from models import db, Statute, Part, Chapter, Set, Section, Subsection, Annotation
 from models import SchPart, SchChapter, SchSet, SchSection, SchSubsection
-        
+import time
+
 def check_exists(model, **kwargs):
     """
     Check if a record already exists to prevent duplicates
@@ -49,7 +51,7 @@ def get_next_order_no(parent_id, model, parent_field):
         
 def save_with_transaction(item):
     """
-    Save an item using database transaction to prevent data corruption
+    Save an item using database transaction with PostgreSQL optimizations
     
     Args:
         item: SQLAlchemy model instance to save
@@ -57,39 +59,84 @@ def save_with_transaction(item):
     Returns:
         Tuple (success, message)
     """
-    try:
-        # Add and flush to get ID if necessary
-        db.session.add(item)
-        db.session.flush()
-        
-        # Commit the transaction
-        db.session.commit()
-        
-        return True, f"Successfully saved {item.__class__.__name__} with ID {item.id}"
-    except IntegrityError as e:
-        # Roll back on integrity errors (duplicate entries, etc.)
-        db.session.rollback()
-        
-        error_msg = str(e)
-        
-        if 'unique constraint' in error_msg.lower():
-            return False, "A duplicate entry already exists. Please check your input."
-        
-        current_app.logger.error(f"Integrity error: {error_msg}")
-        return False, "Could not save due to data integrity error."
-    except SQLAlchemyError as e:
-        # Roll back on other database errors
-        db.session.rollback()
-        
-        current_app.logger.error(f"Database error: {str(e)}")
-        return False, "Could not save due to a database error."
-    except Exception as e:
-        # Roll back on unexpected errors
-        db.session.rollback()
-        
-        current_app.logger.error(f"Unexpected error: {str(e)}")
-        return False, "Could not save due to an unexpected error."
-
+    max_retries = 3
+    retry_delay = 0.1
+    
+    for attempt in range(max_retries):
+        try:
+            # Add the item
+            db.session.add(item)
+            
+            # Flush to detect any constraint violations early
+            db.session.flush()
+            
+            # Commit the transaction
+            db.session.commit()
+            
+            return True, f"Successfully saved {item.__class__.__name__} with ID {item.id}"
+            
+        except IntegrityError as e:
+            # Roll back on integrity errors (duplicate entries, etc.)
+            db.session.rollback()
+            
+            error_msg = str(e).lower()
+            
+            if 'unique constraint' in error_msg or 'duplicate key' in error_msg:
+                return False, "A duplicate entry already exists. Please check your input."
+            
+            current_app.logger.error(f"Integrity error: {str(e)}")
+            return False, "Could not save due to data integrity error."
+            
+        except (OperationalError, DisconnectionError) as e:
+            # Handle connection issues
+            db.session.rollback()
+            
+            error_msg = str(e).lower()
+            
+            if attempt < max_retries - 1:
+                if 'connection' in error_msg or 'timeout' in error_msg or 'server closed' in error_msg:
+                    current_app.logger.warning(f"Database connection issue, retrying... Attempt {attempt + 1}/{max_retries}")
+                    time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                    
+                    # Try to refresh the session
+                    try:
+                        db.session.remove()
+                    except:
+                        pass
+                    continue
+            
+            current_app.logger.error(f"Database connection error after {max_retries} attempts: {str(e)}")
+            return False, "Database connection error. Please try again."
+            
+        except SQLAlchemyError as e:
+            # Roll back on other database errors
+            db.session.rollback()
+            
+            error_msg = str(e).lower()
+            
+            # Handle serialization failures (PostgreSQL specific)
+            if ('serialization failure' in error_msg or 
+                'deadlock detected' in error_msg or 
+                'could not serialize' in error_msg):
+                if attempt < max_retries - 1:
+                    current_app.logger.warning(f"Transaction conflict, retrying... Attempt {attempt + 1}/{max_retries}")
+                    time.sleep(retry_delay * (attempt + 1))
+                    continue
+                else:
+                    current_app.logger.error(f"Transaction conflict after {max_retries} attempts: {str(e)}")
+                    return False, "Database conflict. Please try again."
+            
+            current_app.logger.error(f"Database error: {str(e)}")
+            return False, "Could not save due to a database error."
+            
+        except Exception as e:
+            # Roll back on unexpected errors
+            db.session.rollback()
+            
+            current_app.logger.error(f"Unexpected error: {str(e)}")
+            return False, "Could not save due to an unexpected error."
+    
+    return False, f"Failed to save after {max_retries} attempts."
 def get_full_hierarchy(statute_id):
     """
     Get the full hierarchy of a statute for display

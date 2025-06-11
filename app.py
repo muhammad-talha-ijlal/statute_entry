@@ -27,6 +27,28 @@ def create_app(config_class=Config):
     app.register_blueprint(annotation_bp)
     app.register_blueprint(schedule_bp)
     
+    # Session management for PostgreSQL + Gunicorn
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        """Ensure database sessions are properly closed"""
+        try:
+            if exception:
+                db.session.rollback()
+            db.session.remove()
+        except Exception as e:
+            app.logger.error(f"Error in session teardown: {e}")
+    
+    @app.before_request
+    def before_request():
+        """Ensure fresh database connection for each request"""
+        try:
+            # Test the connection
+            db.session.execute(db.text('SELECT 1'))
+        except Exception as e:
+            app.logger.warning(f"Database connection issue, reconnecting: {e}")
+            db.session.rollback()
+            db.session.remove()
+    
     # Home route
     @app.route('/')
     def index():
@@ -64,7 +86,6 @@ def create_app(config_class=Config):
 app = create_app()
 
 if __name__ == '__main__':
-    # Create application instance
     
     # Run the application
     app.run(host='0.0.0.0', port=5000, debug=app.config['DEBUG'])
