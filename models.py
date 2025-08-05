@@ -3,6 +3,29 @@ from datetime import datetime
 import pytz
 
 from extensions import db
+from flask_login import UserMixin
+
+class User(UserMixin, db.Model):
+    __tablename__ = "user"
+    id       = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)   # store a hash
+
+    # convenience helpers
+    def set_password(self, raw_pwd):
+        self.password = raw_pwd
+    def check_password(self, raw_pwd):
+        return self.password == raw_pwd
+
+class Log(db.Model):
+    __tablename__ = "log"
+    id         = db.Column(db.Integer, primary_key=True)
+    user_id    = db.Column(db.Integer, db.ForeignKey("user.id"))
+    table_name = db.Column(db.String(50), nullable=False)
+    record_id  = db.Column(db.Integer, nullable=False)
+    action     = db.Column(db.String(10), nullable=False)   # INSERT / UPDATE / DELETE
+    timestamp  = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(pytz.UTC))
+
 
 class Statute(db.Model):
     """Statute model corresponding to statute table in schema"""
@@ -404,3 +427,30 @@ class SchSubsection(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+
+from sqlalchemy import event
+from flask_login import current_user
+
+def _log_action(mapper, connection, target, action):
+    # skip if the model *is* the Log table
+    if target.__tablename__ == "log":
+        return
+    try:
+        user_id = current_user.get_id() if current_user.is_authenticated else None
+    except RuntimeError:
+        user_id = None  # outside request ctx (e.g. CLI)
+    connection.execute(
+        Log.__table__.insert().values(
+            user_id=user_id,
+            table_name=target.__tablename__,
+            record_id=getattr(target, "id", None),
+            action=action
+        )
+    )
+
+for act, sa_event in [("INSERT", "after_insert"),
+                      ("UPDATE", "after_update"),
+                      ("DELETE", "after_delete")]:
+    event.listen(db.Model, sa_event,
+                 lambda mapper, conn, tgt, a=act: _log_action(mapper, conn, tgt, a),
+                 propagate=True)

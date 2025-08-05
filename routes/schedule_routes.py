@@ -5,11 +5,12 @@ from forms import SchPartForm, SchChapterForm, SchSetForm, SchSectionForm, SchSu
 from database import save_with_transaction, get_next_order_no
 from datetime import datetime
 import pytz
-
+from flask_login import login_required
 schedule_bp = Blueprint('schedule', __name__, url_prefix='/schedule')
 
 # Schedule Part routes
 @schedule_bp.route('/statute/<int:statute_id>/part/new', methods=['GET', 'POST'])
+@login_required
 def add_sch_part(statute_id):
     """Add a new schedule part to a statute"""
     try:
@@ -65,6 +66,7 @@ def add_sch_part(statute_id):
         return redirect(url_for('statute.view_statute', statute_id=statute_id))
 
 @schedule_bp.route('/part/<int:sch_part_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_sch_part(sch_part_id):
     """Edit an existing schedule part"""
     try:
@@ -106,6 +108,7 @@ def edit_sch_part(sch_part_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/part/<int:sch_part_id>/delete', methods=['POST'])
+@login_required
 def delete_sch_part(sch_part_id):
     """Delete a schedule part and all its components"""
     try:
@@ -135,6 +138,7 @@ def delete_sch_part(sch_part_id):
 
 # Schedule Chapter routes
 @schedule_bp.route('/part/<int:sch_part_id>/chapter/new', methods=['GET', 'POST'])
+@login_required
 def add_sch_chapter(sch_part_id):
     """Add a new schedule chapter to a part"""
     try:
@@ -193,6 +197,7 @@ def add_sch_chapter(sch_part_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/chapter/<int:sch_chapter_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_sch_chapter(sch_chapter_id):
     """Edit an existing schedule chapter"""
     try:
@@ -236,6 +241,7 @@ def edit_sch_chapter(sch_chapter_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/chapter/<int:sch_chapter_id>/delete', methods=['POST'])
+@login_required
 def delete_sch_chapter(sch_chapter_id):
     """Delete a schedule chapter and all its components"""
     try:
@@ -266,6 +272,7 @@ def delete_sch_chapter(sch_chapter_id):
 
 # Schedule Set routes
 @schedule_bp.route('/chapter/<int:sch_chapter_id>/set/new', methods=['GET', 'POST'])
+@login_required
 def add_sch_set(sch_chapter_id):
     """Add a new schedule set to a chapter"""
     try:
@@ -326,6 +333,7 @@ def add_sch_set(sch_chapter_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/set/<int:sch_set_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_sch_set(sch_set_id):
     """Edit an existing schedule set"""
     try:
@@ -371,6 +379,7 @@ def edit_sch_set(sch_set_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/set/<int:sch_set_id>/delete', methods=['POST'])
+@login_required
 def delete_sch_set(sch_set_id):
     """Delete a schedule set and all its components"""
     try:
@@ -402,6 +411,7 @@ def delete_sch_set(sch_set_id):
 
 # Schedule Section routes
 @schedule_bp.route('/set/<int:sch_set_id>/section/new', methods=['GET', 'POST'])
+@login_required
 def add_sch_section(sch_set_id):
     """Add a new schedule section to a set"""
     try:
@@ -465,6 +475,7 @@ def add_sch_section(sch_set_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/section/<int:sch_section_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_sch_section(sch_section_id):
     """Edit an existing schedule section"""
     try:
@@ -512,6 +523,7 @@ def edit_sch_section(sch_section_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/section/<int:sch_section_id>/delete', methods=['POST'])
+@login_required
 def delete_sch_section(sch_section_id):
     """Delete a schedule section and all its subsections"""
     try:
@@ -544,6 +556,7 @@ def delete_sch_section(sch_section_id):
 
 # Schedule Subsection routes
 @schedule_bp.route('/section/<int:sch_section_id>/subsection/new', methods=['GET', 'POST'])
+@login_required
 def add_sch_subsection(sch_section_id):
     """Add a new schedule subsection to a section"""
     try:
@@ -607,6 +620,7 @@ def add_sch_subsection(sch_section_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/subsection/<int:sch_subsection_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_sch_subsection(sch_subsection_id):
     """Edit an existing schedule subsection"""
     try:
@@ -657,6 +671,7 @@ def edit_sch_subsection(sch_subsection_id):
         return redirect(url_for('statute.list_statutes'))
 
 @schedule_bp.route('/subsection/<int:sch_subsection_id>/delete', methods=['POST'])
+@login_required
 def delete_sch_subsection(sch_subsection_id):
     """Delete a schedule subsection"""
     try:

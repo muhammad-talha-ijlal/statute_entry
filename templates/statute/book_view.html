@@ -1,0 +1,283 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ statute.name }} - Book View{% endblock %}
+
+{% block content %}
+<div class="book-view-container">
+    <!-- Header with navigation -->
+    <div class="book-header">
+        <div class="book-navigation">
+            <a href="{{ url_for('statute.view_statute', statute_id=statute.id) }}" class="btn btn-secondary">
+                ← Back to Tree View
+            </a>
+            <a href="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" class="btn btn-outline">
+                Edit Statute
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">Print</button>
+        </div>
+        <div class="view-options">
+            <button class="btn btn-small" onclick="adjustFontSize(-1)">A-</button>
+            <button class="btn btn-small" onclick="adjustFontSize(1)">A+</button>
+            <button class="btn btn-small" onclick="toggleAnnotations()">Toggle Annotations</button>
+        </div>
+    </div>
+
+    <!-- Book content -->
+    <div class="book-content" id="book-content">
+        <!-- Statute Title -->
+        <div class="statute-title">
+            <h1>{{ statute.name|safe }}</h1>
+            {% if statute.act_no %}
+            <div class="act-number">{{ statute.act_no|safe }}</div>
+            {% endif %}
+            {% if statute.date %}
+            <div class="statute-date">{{ statute.date.strftime('%B %d, %Y') }}</div>
+            {% endif %}
+        </div>
+
+        <!-- Preface -->
+        {% if statute.preface %}
+        <div class="statute-preface">
+            <h2>Preface</h2>
+            <div class="preface-content">{{ statute.preface|safe }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Main Structure -->
+        {% if hierarchy.parts %}
+        <div class="statute-body">
+            {% for part in hierarchy.parts %}
+                {% if part.name and part.name.lower() != 'pseudo' %}
+                <div class="part-section">
+                    <h2 class="part-heading">
+                        {% if part.part_no %}Part {{ part.part_no|safe }}{% else %}Part {{ loop.index }}{% endif %}
+                        <br>{{ part.name|safe }}
+                    </h2>
+                </div>
+                {% endif %}
+
+                {% for chapter in part.chapters %}
+                    {% if chapter.name and chapter.name.lower() != 'pseudo' %}
+                    <div class="chapter-section">
+                        <h3 class="chapter-heading">
+                            {% if chapter.chapter_no %}Chapter {{ chapter.chapter_no|safe }}{% else %}Chapter {{ loop.index }}{% endif %}
+                            <br>{{ chapter.name|safe }}
+                        </h3>
+                    </div>
+                    {% endif %}
+
+                    {% for set in chapter.sets %}
+                        {% if set.name and set.name.lower() != 'pseudo' %}
+                        <div class="set-section">
+                            <h4 class="set-heading">
+                                {% if set.set_no %}{{ set.set_no|safe }}.{% endif %} {{ set.name|safe }}
+                            </h4>
+                        </div>
+                        {% endif %}
+
+                        {% for section in set.sections %}
+                            {% if section.name and section.name.lower() != 'pseudo' %}
+                            <div class="section-container">
+                                <h5 class="section-heading">
+                                    {% if section.section_no %}{{ section.section_no|safe }}.{% endif %} {{ section.name|safe }}
+                                </h5>
+                            </div>
+                            {% endif %}
+
+                            {% for subsection in section.subsections %}
+                            <div class="subsection-container">
+                                {% if subsection.name and subsection.name.lower() != 'pseudo' %}
+                                <h6 class="subsection-heading">
+                                    {% if subsection.subsection_no %}({{ subsection.subsection_no|safe }}){% endif %} {{ subsection.name|safe }}
+                                </h6>
+                                {% endif %}
+                                
+                                {% if subsection.content %}
+                                <div class="subsection-content">
+                                    {{ subsection.content|safe }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Schedules -->
+        {% if hierarchy.sch_parts %}
+        <div class="schedules-section">
+            <h2 class="schedules-title">Schedules</h2>
+            
+            {% for sch_part in hierarchy.sch_parts %}
+                {% if sch_part.name and sch_part.name.lower() != 'pseudo' %}
+                <div class="schedule-part-section">
+                    <h3 class="schedule-part-heading">
+                        {% if sch_part.part_no %}Schedule {{ sch_part.part_no }}{% else %}Schedule {{ loop.index }}{% endif %}
+                        <br>{{ sch_part.name|safe }}
+                    </h3>
+                </div>
+                {% endif %}
+
+                {% for sch_chapter in sch_part.sch_chapters %}
+                    {% if sch_chapter.name and sch_chapter.name.lower() != 'pseudo' %}
+                    <div class="schedule-chapter-section">
+                        <h4 class="schedule-chapter-heading">
+                            {% if sch_chapter.chapter_no %}Chapter {{ sch_chapter.chapter_no }}{% else %}Chapter {{ loop.index }}{% endif %}
+                            <br>{{ sch_chapter.name|safe }}
+                        </h4>
+                    </div>
+                    {% endif %}
+
+                    {% for sch_set in sch_chapter.sch_sets %}
+                        {% if sch_set.name and sch_set.name.lower() != 'pseudo' %}
+                        <div class="schedule-set-section">
+                            <h5 class="schedule-set-heading">
+                                {% if sch_set.set_no %}{{ sch_set.set_no }}.{% endif %} {{ sch_set.name|safe }}
+                            </h5>
+                        </div>
+                        {% endif %}
+
+                        {% for sch_section in sch_set.sch_sections %}
+                            {% if sch_section.name and sch_section.name.lower() != 'pseudo' %}
+                            <div class="schedule-section-container">
+                                <h6 class="schedule-section-heading">
+                                    {% if sch_section.section_no %}{{ sch_section.section_no }}.{% endif %} {{ sch_section.name|safe }}
+                                </h6>
+                            </div>
+                            {% endif %}
+
+                            {% for sch_subsection in sch_section.sch_subsections %}
+                            <div class="schedule-subsection-container">
+                                {% if sch_subsection.name and sch_subsection.name.lower() != 'pseudo' %}
+                                <h6 class="schedule-subsection-heading">
+                                    {% if sch_subsection.subsection_no %}({{ sch_subsection.subsection_no }}){% endif %} {{ sch_subsection.name|safe }}
+                                </h6>
+                                {% endif %}
+                                
+                                {% if sch_subsection.content %}
+                                <div class="schedule-subsection-content">
+                                    {{ sch_subsection.content|safe }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Floating annotation toggle for mobile -->
+    <div class="floating-controls">
+        <button class="btn-floating" onclick="toggleAnnotations()" title="Toggle Annotations">
+            📝
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips for annotations
+    initializeAnnotations();
+    
+    // Process superscript formatting
+    processSuperscipts();
+});
+
+function initializeAnnotations() {
+    const annotatedElements = document.querySelectorAll('.annotated-text');
+    
+    annotatedElements.forEach(element => {
+        const tooltip = element.getAttribute('data-tooltip');
+        if (tooltip) {
+            // Create tooltip element
+            const tooltipDiv = document.createElement('div');
+            tooltipDiv.className = 'annotation-tooltip';
+            tooltipDiv.innerHTML = tooltip;
+            tooltipDiv.style.display = 'none';
+            document.body.appendChild(tooltipDiv);
+            
+            // Show tooltip on hover
+            element.addEventListener('mouseenter', function(e) {
+                const rect = element.getBoundingClientRect();
+                tooltipDiv.style.display = 'block';
+                tooltipDiv.style.left = rect.left + 'px';
+                tooltipDiv.style.top = (rect.bottom + 5) + 'px';
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                tooltipDiv.style.display = 'none';
+            });
+            
+            // Handle touch for mobile
+            element.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const rect = element.getBoundingClientRect();
+                tooltipDiv.style.display = 'block';
+                tooltipDiv.style.left = rect.left + 'px';
+                tooltipDiv.style.top = (rect.bottom + 5) + 'px';
+                
+                // Hide after 3 seconds on mobile
+                setTimeout(() => {
+                    tooltipDiv.style.display = 'none';
+                }, 3000);
+            });
+        }
+    });
+}
+
+function processSuperscipts() {
+    // Convert _superscript{number} format to actual superscript
+    const content = document.getElementById('book-content');
+    const regex = /_superscript\{(\d+)\}/g;
+    
+    content.innerHTML = content.innerHTML.replace(regex, '<sup class="annotation-number">$1</sup>');
+}
+
+function adjustFontSize(change) {
+    const content = document.getElementById('book-content');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    const newSize = currentSize + change;
+    
+    if (newSize >= 12 && newSize <= 24) {
+        content.style.fontSize = newSize + 'px';
+        localStorage.setItem('bookViewFontSize', newSize);
+    }
+}
+
+function toggleAnnotations() {
+    const annotatedElements = document.querySelectorAll('.annotated-text');
+    const isHidden = document.body.classList.contains('hide-annotations');
+    
+    if (isHidden) {
+        document.body.classList.remove('hide-annotations');
+        localStorage.setItem('showAnnotations', 'true');
+    } else {
+        document.body.classList.add('hide-annotations');
+        localStorage.setItem('showAnnotations', 'false');
+    }
+}
+
+// Load saved preferences
+document.addEventListener('DOMContentLoaded', function() {
+    // Load font size preference
+    const savedFontSize = localStorage.getItem('bookViewFontSize');
+    if (savedFontSize) {
+        document.getElementById('book-content').style.fontSize = savedFontSize + 'px';
+    }
+    
+    // Load annotation visibility preference
+    const showAnnotations = localStorage.getItem('showAnnotations');
+    if (showAnnotations === 'false') {
+        document.body.classList.add('hide-annotations');
+    }
+});
+</script>
+{% endblock %}

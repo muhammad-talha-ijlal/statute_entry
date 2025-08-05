@@ -17,6 +17,7 @@
         </div>
         
         <div class="action-buttons">
+            <a href="{{ url_for('statute.book_view', statute_id=statute.id) }}" class="btn btn-primary">📖 Book View</a>
             <a href="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" class="btn btn-secondary">Edit Statute</a>
             <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add Part</a>
             <a href="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" class="btn btn-primary">Add Schedule</a>
@@ -31,6 +32,11 @@
         <div class="content">{{ statute.preface }}</div>
     </div>
     {% endif %}
+
+    <div id="reorder-overlay" class="overlay-container" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Saving new order...</p>
+    </div>
     
     <div class="statute-structure">
         <div class="structure-header">
@@ -42,8 +48,8 @@
         </div>
         
         {% if parts %}
-        <div class="hierarchy-tree">
-            <ul class="parts-list tree-root">
+        <div class="hierarchy-tree" id="hierarchy-tree">
+            <ul class="parts-list tree-root sortable-list" data-parent-id="{{ statute.id }}" data-level="part" data-group-name="part">
                 {% for part in parts %}
                 <li class="tree-node part-node" data-level="part" data-id="{{ part.id }}">
                     <div class="tree-item part-item">
@@ -71,7 +77,7 @@
                     </div>
                     
                     {% if part.chapters %}
-                    <ul class="chapters-list tree-children">
+                    <ul class="chapters-list tree-children sortable-list" data-parent-id="{{ part.id }}" data-level="chapter" data-group-name="chapter">
                         {% for chapter in part.chapters %}
                         <li class="tree-node chapter-node" data-level="chapter" data-id="{{ chapter.id }}">
                             <div class="tree-item chapter-item">
@@ -99,7 +105,7 @@
                             </div>
                             
                             {% if chapter.sets %}
-                            <ul class="sets-list tree-children">
+                            <ul class="sets-list tree-children sortable-list" data-parent-id="{{ chapter.id }}" data-level="set" data-group-name="set">
                                 {% for set in chapter.sets %}
                                 <li class="tree-node set-node" data-level="set" data-id="{{ set.id }}">
                                     <div class="tree-item set-item">
@@ -127,7 +133,7 @@
                                     </div>
                                     
                                     {% if set.sections %}
-                                    <ul class="sections-list tree-children">
+                                    <ul class="sections-list tree-children sortable-list" data-parent-id="{{ set.id }}" data-level="section" data-group-name="section">
                                         {% for section in set.sections %}
                                         <li class="tree-node section-node" data-level="section" data-id="{{ section.id }}">
                                             <div class="tree-item section-item">
@@ -155,7 +161,7 @@
                                             </div>
                                             
                                             {% if section.subsections %}
-                                            <ul class="subsections-list tree-children">
+                                            <ul class="subsections-list tree-children sortable-list" data-parent-id="{{ section.id }}" data-level="subsection" data-group-name="subsection">
                                                 {% for subsection in section.subsections %}
                                                 <li class="tree-node subsection-node leaf-node" data-level="subsection" data-id="{{ subsection.id }}">
                                                     <div class="tree-item subsection-item">

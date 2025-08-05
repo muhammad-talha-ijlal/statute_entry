@@ -152,6 +152,20 @@ CREATE TABLE sch_subsection (
     CONSTRAINT fk_sch_subsection_section FOREIGN KEY (sch_section_id) REFERENCES sch_section(id) ON DELETE CASCADE,
     CONSTRAINT uq_sch_subsection_section_order UNIQUE (sch_section_id, order_no)
 );
+CREATE TABLE "user" (
+    id SERIAL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
+
+CREATE TABLE "log" (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES "user"(id),
+    table_name TEXT NOT NULL,
+    record_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- Create indexes for performance
 CREATE INDEX idx_part_statute_id ON part(statute_id);

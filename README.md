@@ -1,123 +1,81 @@
-# Legal Text Structuring Application
+# Statute Entry Application
 
-A web application for structuring legal texts of Pakistan according to a hierarchical schema. This application allows users to input legal texts and organize them into a structured format following statutory organization patterns.
+This Flask-based web application provides a comprehensive system for entering, managing, and viewing legal statutes. It supports a hierarchical structure for statutes, including parts, chapters, sets, sections, and subsections, as well as a parallel structure for schedules. The application also includes a robust annotation system that allows for detailed footnotes and references within the statute text.
 
 ## Features
 
-- **Hierarchical Data Entry**: Input legal texts following a hierarchical structure (Statute → Part → Chapter → Set → Section → Subsection)
-- **Schedule Support**: Separate hierarchy for schedule components
-- **Annotation System**: Add annotations to any part of the legal text
-- **Search Capability**: Search across all legal texts and components
-- **Duplicate Prevention**: Safeguards against duplicate entries
+- **Statute Management:** Create, edit, delete, and view statutes with detailed information such as act number, date, and preface.
+- **Hierarchical Structure:** Organize statutes into a logical hierarchy of parts, chapters, sets, sections, and subsections.
+- **Schedule Management:** Manage schedules with a similar hierarchical structure to the main statute body.
+- **Annotation System:** Add, edit, and delete annotations, which can be linked to specific parts of the statute text.
+- **Book View:** View statutes in a clean, book-like format with annotations displayed as tooltips.
+- **User Authentication:** Secure login system to protect the application from unauthorized access.
+- **Database Logging:** Track all changes made to the database for auditing and version control.
+- **Search Functionality:** Quickly find statutes and annotations using a powerful search feature.
+- **Pagination:** Efficiently navigate through long lists of statutes and annotations.
+
+## Tech Stack
+
+- **Backend:** Flask
+- **Database:** PostgreSQL
+- **ORM:** SQLAlchemy
+- **Frontend:** Jinja2, HTML, CSS, JavaScript
+- **Authentication:** Flask-Login
+- **Forms:** Flask-WTF
+- **Environment Variables:** python-dotenv
 
 ## Project Structure
 
-```
-legal_text_app/
-├── app.py                 # Main Flask application
-├── config.py              # Configuration settings
-├── database.py            # Database helper functions
-├── forms.py               # Form definitions with validations
-├── models.py              # SQLAlchemy ORM models
-├── routes/                # Route handlers
-│   ├── __init__.py
-│   ├── statute_routes.py
-│   ├── hierarchy_routes.py
-│   ├── annotation_routes.py
-│   └── schedule_routes.py
-├── static/                # Static assets
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       ├── main.js
-│       └── validation.js
-├── templates/             # Jinja2 templates
-│   ├── layout.html
-│   ├── index.html
-│   ├── statute/
-│   ├── hierarchy/
-│   ├── annotation/
-│   └── schedule/
-└── requirements.txt       # Project dependencies
-```
+The project is organized into the following directories and files:
 
-## Database Schema
+- **`app.py`:** The main application file that initializes the Flask app, registers blueprints, and sets up error handlers.
+- **`config.py`:** Configuration settings for the application, including database URI, secret key, and other environment-specific variables.
+- **`database.py`:** Helper functions for interacting with the database, including saving, deleting, and querying records.
+- **`extensions.py`:** Initializes Flask extensions such as SQLAlchemy and Flask-Login.
+- **`forms.py`:** Defines the forms used for creating and editing statutes, annotations, and hierarchical components.
+- **`models.py`:** Defines the SQLAlchemy database models for all tables in the application.
+- **`routes/`:** Contains the blueprints for different parts of the application:
+  - **`annotation_routes.py`:** Routes for managing annotations.
+  - **`auth_routes.py`:** Routes for user authentication.
+  - **`hierarchy_routes.py`:** Routes for managing the main statute hierarchy.
+  - **`schedule_routes.py`:** Routes for managing the schedule hierarchy.
+  - **`statute_routes.py`:** Routes for managing statutes.
+- **`static/`:** Static assets such as CSS and JavaScript files.
+- **`templates/`:** Jinja2 templates for rendering the application's UI.
+- **`schema.sql`:** The SQL schema for the PostgreSQL database.
+- **`requirements.txt`:** A list of the Python packages required to run the application.
 
-The application uses a PostgreSQL database with the following schema:
+## Getting Started
 
-- **statute**: Top-level legal document
-- **part**: Major divisions of a statute
-- **chapter**: Subdivisions of parts
-- **set**: Groupings within chapters
-- **section**: Specific legal provisions
-- **subsection**: Detailed components of sections
-- **annotation**: Additional notes and references
-- **sch_part**, **sch_chapter**, etc.: Parallel structure for schedules
+To get started with the application, follow these steps:
 
-## Installation
-
-1. Clone the repository:
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
    ```
-   git clone https://github.com/yourusername/legal_text_app.git
-   cd legal_text_app
-   ```
-
-2. Create and activate a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```
+2. **Install the required packages:**
+   ```bash
    pip install -r requirements.txt
    ```
-
-4. Set up environment variables:
-   ```
-   export FLASK_APP=app.py
-   export FLASK_ENV=development
-   export SECRET_KEY=your_secret_key
-   export DATABASE_URL=postgresql://username:password@localhost/legal_text_db
-   ```
-
-5. Initialize the database:
-   ```
+3. **Set up the database:**
+   - Create a PostgreSQL database.
+   - Copy the `.env.example` file to `.env` and update the `DATABASE_URL` with your database connection string.
+   - Run the `schema.sql` file to create the necessary tables.
+4. **Run the application:**
+   ```bash
    flask run
    ```
 
 ## Usage
 
-1. Start the Flask development server:
-   ```
-   flask run
-   ```
+Once the application is running, you can navigate to the home page to view a list of recent statutes. From there, you can:
 
-2. Open your browser and navigate to `http://localhost:5000`
+- **Add a new statute:** Click the "Add Statute" button and fill out the form.
+- **View a statute:** Click on a statute's name to see its details and hierarchical structure.
+- **Edit a statute:** From the statute view page, click the "Edit" button to modify its details.
+- **Add annotations:** From the statute view page, click the "Add Annotation" button to add a new annotation.
+- **View in book format:** From the statute view page, click the "Book View" button to see the statute in a clean, readable format.
 
-3. From the homepage, you can:
-   - Add a new statute
-   - Select an existing statute to resume work
-   - View all statutes
-   - Search for specific legal components
+## Contributing
 
-4. When adding a new statute, follow the hierarchical path:
-   - Add statute details
-   - Add parts to the statute
-   - Add chapters to parts
-   - Add sets to chapters
-   - Add sections to sets
-   - Add subsections to sections
-
-5. Annotations can be added at any point in the process.
-
-## Development
-
-- **Adding Features**: Follow the MVC pattern when extending functionality
-- **Database Changes**: Update models.py and run migrations if schema changes
-- **Styling**: Modify CSS in static/css/styles.css
-- **Client-Side Logic**: Add JavaScript in static/js/main.js
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.# statute_entry
+Contributions are welcome! If you have any suggestions or find any bugs, please open an issue or submit a pull request.

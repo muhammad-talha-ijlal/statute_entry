@@ -5,12 +5,13 @@ from forms import PartForm, ChapterForm, SetForm, SectionForm, SubsectionForm
 from database import save_with_transaction, get_next_order_no
 from datetime import datetime
 import pytz
-
+from flask_login import login_required
 # Create blueprint
 hierarchy_bp = Blueprint('hierarchy', __name__)
 
 # Part routes
 @hierarchy_bp.route('/statute/<int:statute_id>/part/new', methods=['GET', 'POST'])
+@login_required
 def add_part(statute_id):
     """Add a new part to a statute"""
     try:
@@ -66,6 +67,7 @@ def add_part(statute_id):
         return redirect(url_for('statute.view_statute', statute_id=statute_id))
 
 @hierarchy_bp.route('/part/<int:part_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_part(part_id):
     """Edit an existing part"""
     try:
@@ -107,6 +109,7 @@ def edit_part(part_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/part/<int:part_id>/delete', methods=['POST'])
+@login_required
 def delete_part(part_id):
     """Delete a part and all its components"""
     try:
@@ -134,8 +137,8 @@ def delete_part(part_id):
         flash("An error occurred while deleting the part.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
-# Chapter routes
 @hierarchy_bp.route('/part/<int:part_id>/chapter/new', methods=['GET', 'POST'])
+@login_required
 def add_chapter(part_id):
     """Add a new chapter to a part"""
     try:
@@ -195,6 +198,7 @@ def add_chapter(part_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/chapter/<int:chapter_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_chapter(chapter_id):
     """Edit an existing chapter"""
     try:
@@ -238,6 +242,7 @@ def edit_chapter(chapter_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/chapter/<int:chapter_id>/delete', methods=['POST'])
+@login_required
 def delete_chapter(chapter_id):
     """Delete a chapter and all its components"""
     try:
@@ -266,8 +271,8 @@ def delete_chapter(chapter_id):
         flash("An error occurred while deleting the chapter.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
-# Set routes
 @hierarchy_bp.route('/chapter/<int:chapter_id>/set/new', methods=['GET', 'POST'])
+@login_required
 def add_set(chapter_id):
     """Add a new set to a chapter"""
     try:
@@ -329,6 +334,7 @@ def add_set(chapter_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/set/<int:set_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_set(set_id):
     """Edit an existing set"""
     try:
@@ -374,6 +380,7 @@ def edit_set(set_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/set/<int:set_id>/delete', methods=['POST'])
+@login_required
 def delete_set(set_id):
     """Delete a set and all its components"""
     try:
@@ -403,8 +410,8 @@ def delete_set(set_id):
         flash("An error occurred while deleting the set.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
-# Section routes
 @hierarchy_bp.route('/set/<int:set_id>/section/new', methods=['GET', 'POST'])
+@login_required
 def add_section(set_id):
     """Add a new section to a set"""
     try:
@@ -470,6 +477,7 @@ def add_section(set_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/section/<int:section_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_section(section_id):
     """Edit an existing section"""
     try:
@@ -515,8 +523,9 @@ def edit_section(section_id):
         current_app.logger.error(f"Error editing section: {str(e)}")
         flash("An error occurred while editing the section.", "danger")
         return redirect(url_for('statute.list_statutes'))
-    
+
 @hierarchy_bp.route('/section/<int:section_id>/delete', methods=['POST'])
+@login_required
 def delete_section(section_id):
     """Delete a section and all its subsections"""
     try:
@@ -547,8 +556,9 @@ def delete_section(section_id):
         flash("An error occurred while deleting the section.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
-# Subsection routes
+
 @hierarchy_bp.route('/section/<int:section_id>/subsection/new', methods=['GET', 'POST'])
+@login_required
 def add_subsection(section_id):
     """Add a new subsection to a section"""
     try:
@@ -614,7 +624,9 @@ def add_subsection(section_id):
         flash("An error occurred while adding the subsection.", "danger")
         return redirect(url_for('statute.list_statutes'))
 
+
 @hierarchy_bp.route('/subsection/<int:subsection_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_subsection(subsection_id):
     """Edit an existing subsection"""
     try:
@@ -665,6 +677,7 @@ def edit_subsection(subsection_id):
         return redirect(url_for('statute.list_statutes'))
 
 @hierarchy_bp.route('/subsection/<int:subsection_id>/delete', methods=['POST'])
+@login_required
 def delete_subsection(subsection_id):
     """Delete a subsection"""
     try:
@@ -695,3 +708,69 @@ def delete_subsection(subsection_id):
         current_app.logger.error(f"Error deleting subsection: {str(e)}")
         flash("An error occurred while deleting the subsection.", "danger")
         return redirect(url_for('statute.list_statutes'))
+
+@hierarchy_bp.route('/reorder', methods=['POST'])
+@login_required
+def reorder():
+    """Reorder a component in the hierarchy, handling unique constraints correctly."""
+    data = request.get_json()
+    component_type = data.get('type')
+    component_id = data.get('id')
+    new_parent_id = int(data.get('new_parent_id'))
+    new_index = int(data.get('new_index')) # 0-based index from SortableJS
+
+    model_map = {
+        'part': (Part, 'statute_id'),
+        'chapter': (Chapter, 'part_id'),
+        'set': (Set, 'chapter_id'),
+        'section': (Section, 'set_id'),
+        'subsection': (Subsection, 'section_id'),
+    }
+
+    if component_type not in model_map:
+        return jsonify({'success': False, 'message': 'Invalid component type.'}), 400
+
+    model, parent_attr = model_map[component_type]
+    
+    try:
+        # Get the item being moved
+        item = db.session.query(model).filter_by(id=component_id).first()
+        if not item:
+            return jsonify({'success': False, 'message': 'Component not found.'}), 404
+
+        old_parent_id = getattr(item, parent_attr)
+        old_index = item.order_no - 1 # Convert to 0-based index
+
+        # If the item is not changing position, do nothing
+        if old_parent_id == new_parent_id and old_index == new_index:
+            return jsonify({'success': True, 'message': 'No change in position.'})
+
+        # --- Transaction starts here ---
+        
+        # 1. Remove item from old list: shift subsequent items down
+        (db.session.query(model)
+            .filter(getattr(model, parent_attr) == old_parent_id, model.order_no > (old_index + 1))
+            .update({'order_no': model.order_no - 1}, synchronize_session=False))
+
+        # 2. Make space in new list: shift subsequent items up
+        (db.session.query(model)
+            .filter(getattr(model, parent_attr) == new_parent_id, model.order_no >= (new_index + 1))
+            .update({'order_no': model.order_no + 1}, synchronize_session=False))
+
+        # 3. Update the item's parent and new position
+        setattr(item, parent_attr, new_parent_id)
+        item.order_no = new_index + 1
+        
+        db.session.commit()
+        # --- Transaction ends here ---
+
+        return jsonify({'success': True, 'message': 'Component reordered successfully.'})
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Database error reordering component: {str(e)}")
+        return jsonify({'success': False, 'message': 'A database error occurred while reordering.'}), 500
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Unexpected error reordering component: {str(e)}")
+        return jsonify({'success': False, 'message': 'An unexpected error occurred.'}), 500

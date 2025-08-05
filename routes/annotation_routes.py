@@ -6,10 +6,11 @@ from forms import AnnotationForm
 from database import save_with_transaction
 from datetime import datetime
 import pytz
-
+from flask_login import login_required
 annotation_bp = Blueprint('annotation', __name__, url_prefix='/annotation')
 
 @annotation_bp.route('/statute/<int:statute_id>/new', methods=['GET', 'POST'])
+@login_required
 def add_annotation(statute_id):
     """Add a new annotation to a statute"""
     # Get the statute
@@ -58,6 +59,7 @@ def add_annotation(statute_id):
     return render_template('annotation/add.html', form=form, statute=statute)
 
 @annotation_bp.route('/<int:annotation_id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_annotation(annotation_id):
     """Edit an existing annotation"""
     try:
@@ -131,6 +133,7 @@ def edit_annotation(annotation_id):
         return redirect(url_for('annotation.list_annotations'))
 
 @annotation_bp.route('/<int:annotation_id>/delete', methods=['POST'])
+@login_required
 def delete_annotation(annotation_id):
     """Delete an annotation"""
     try:
@@ -167,6 +170,7 @@ def delete_annotation(annotation_id):
         return redirect(url_for('annotation.list_annotations'))
 
 @annotation_bp.route('/statute/<int:statute_id>/list', methods=['GET'])
+@login_required
 def list_statute_annotations(statute_id):
     """List all annotations for a specific statute"""
     try:
