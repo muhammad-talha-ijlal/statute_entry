@@ -19,7 +19,7 @@
         <div class="action-buttons">
             <a href="{{ url_for('statute.book_view', statute_id=statute.id) }}" class="btn btn-primary">📖 Book View</a>
             <a href="{{ url_for('statute.edit_statute', statute_id=statute.id) }}" class="btn btn-secondary">Edit Statute</a>
-            <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add Part</a>
+            <a href="#" class="btn btn-primary component-add" data-type="part" data-parent-id="{{ statute.id }}">Add Part</a>
             <a href="{{ url_for('schedule.add_sch_part', statute_id=statute.id) }}" class="btn btn-primary">Add Schedule</a>
             <a href="{{ url_for('annotation.add_annotation', statute_id=statute.id)  }}" class="btn btn-outline">Add Annotation</a>
             <a href="{{ url_for('annotation.list_statute_annotations', statute_id=statute.id) }}" class="btn btn-secondary">View Annotations</a>
@@ -58,16 +58,15 @@
                             <span class="item-name">{{ part.name }}</span>
                         </div>
                         <div class="tree-actions">
-                            <a href="{{ url_for('hierarchy.add_chapter', part_id=part.id) }}" class="btn-small btn-add" title="Add Chapter">
+                            <a href="#" class="btn-small btn-add component-add" data-type="chapter" data-parent-id="{{ part.id }}" title="Add Chapter">
                                 <i class="action-icon add-icon">+</i> Add Chapter
                             </a>
-                            <a href="{{ url_for('hierarchy.edit_part', part_id=part.id) }}" class="btn-small btn-secondary" title="Edit Part">
+                            <a href="#" class="btn-small btn-secondary component-edit" data-type="part" data-id="{{ part.id }}" data-name="{{ part.name|e }}" data-number="{{ part.part_no|e }}" title="Edit Part">
                                 <i class="action-icon edit-icon">✎</i> Edit
                             </a>
-                            <a href="#" class="btn-small btn-delete" title="Delete Part" onclick="document.getElementById('delete-part-form-{{ part.id }}').submit(); return false;">
+                            <a href="#" class="btn-small btn-delete component-delete" data-type="part" data-id="{{ part.id }}" title="Delete Part">
                                 <i class="action-icon delete-icon">×</i> Delete
                             </a>
-                            <form id="delete-part-form-{{ part.id }}" action="{{ url_for('hierarchy.delete_part', part_id=part.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this part and all its components?');" style="display: none;"></form>
                         </div>
                     </div>
                     
@@ -86,16 +85,15 @@
                                     <span class="item-name">{{ chapter.name }}</span>
                                 </div>
                                 <div class="tree-actions">
-                                    <a href="{{ url_for('hierarchy.add_set', chapter_id=chapter.id) }}" class="btn-small btn-add" title="Add Set">
+                                    <a href="#" class="btn-small btn-add component-add" data-type="set" data-parent-id="{{ chapter.id }}" title="Add Set">
                                         <i class="action-icon add-icon">+</i> Add Set
                                     </a>
-                                    <a href="{{ url_for('hierarchy.edit_chapter', chapter_id=chapter.id) }}" class="btn-small btn-secondary" title="Edit Chapter">
+                                    <a href="#" class="btn-small btn-secondary component-edit" data-type="chapter" data-id="{{ chapter.id }}" data-name="{{ chapter.name|e }}" data-number="{{ chapter.chapter_no|e }}" title="Edit Chapter">
                                         <i class="action-icon edit-icon">✎</i> Edit
                                     </a>
-                                    <a href="#" class="btn-small btn-delete" title="Delete Chapter" onclick="document.getElementById('delete-chapter-form-{{ chapter.id }}').submit(); return false;">
+                                    <a href="#" class="btn-small btn-delete component-delete" data-type="chapter" data-id="{{ chapter.id }}" title="Delete Chapter">
                                         <i class="action-icon delete-icon">×</i> Delete
                                     </a>
-                                    <form id="delete-chapter-form-{{ chapter.id }}" action="{{ url_for('hierarchy.delete_chapter', chapter_id=chapter.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this chapter and all its components?');" style="display: none;"></form>
                                 </div>
                             </div>
                             
@@ -114,16 +112,15 @@
                                             <span class="item-name">{{ set.name }}</span>
                                         </div>
                                         <div class="tree-actions">
-                                            <a href="{{ url_for('hierarchy.add_section', set_id=set.id) }}" class="btn-small btn-add" title="Add Section">
+                                            <a href="#" class="btn-small btn-add component-add" data-type="section" data-parent-id="{{ set.id }}" title="Add Section">
                                                 <i class="action-icon add-icon">+</i> Add Section
                                             </a>
-                                            <a href="{{ url_for('hierarchy.edit_set', set_id=set.id) }}" class="btn-small btn-secondary" title="Edit Set">
+                                            <a href="#" class="btn-small btn-secondary component-edit" data-type="set" data-id="{{ set.id }}" data-name="{{ set.name|e }}" data-number="{{ set.set_no|e }}" title="Edit Set">
                                                 <i class="action-icon edit-icon">✎</i> Edit
                                             </a>
-                                            <a href="#" class="btn-small btn-delete" title="Delete Set" onclick="document.getElementById('delete-set-form-{{ set.id }}').submit(); return false;">
+                                            <a href="#" class="btn-small btn-delete component-delete" data-type="set" data-id="{{ set.id }}" title="Delete Set">
                                                 <i class="action-icon delete-icon">×</i> Delete
                                             </a>
-                                            <form id="delete-set-form-{{ set.id }}" action="{{ url_for('hierarchy.delete_set', set_id=set.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this set and all its components?');" style="display: none;"></form>
                                         </div>
                                     </div>
                                     
@@ -142,16 +139,15 @@
                                                     <span class="item-name">{{ section.name }}</span>
                                                 </div>
                                                 <div class="tree-actions">
-                                                    <a href="{{ url_for('hierarchy.add_subsection', section_id=section.id) }}" class="btn-small btn-add" title="Add Subsection">
+                                                    <a href="#" class="btn-small btn-add component-add" data-type="subsection" data-parent-id="{{ section.id }}" title="Add Subsection">
                                                         <i class="action-icon add-icon">+</i> Add Subsection
                                                     </a>
-                                                    <a href="{{ url_for('hierarchy.edit_section', section_id=section.id) }}" class="btn-small btn-secondary" title="Edit Section">
+                                                    <a href="#" class="btn-small btn-secondary component-edit" data-type="section" data-id="{{ section.id }}" data-name="{{ section.name|e }}" data-number="{{ section.section_no|e }}" title="Edit Section">
                                                         <i class="action-icon edit-icon">✎</i> Edit
                                                     </a>
-                                                    <a href="#" class="btn-small btn-delete" title="Delete Section" onclick="document.getElementById('delete-section-form-{{ section.id }}').submit(); return false;">
+                                                    <a href="#" class="btn-small btn-delete component-delete" data-type="section" data-id="{{ section.id }}" title="Delete Section">
                                                         <i class="action-icon delete-icon">×</i> Delete
                                                     </a>
-                                                    <form id="delete-section-form-{{ section.id }}" action="{{ url_for('hierarchy.delete_section', section_id=section.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this section and all its subsections?');" style="display: none;"></form>
                                                 </div>
                                             </div>
                                             
@@ -167,13 +163,12 @@
                                                             <span class="item-name">{{ subsection.name if subsection.name else "" }}</span>
                                                         </div>
                                                         <div class="tree-actions">
-                                                            <a href="{{ url_for('hierarchy.edit_subsection', subsection_id=subsection.id) }}" class="btn-small btn-secondary" title="Edit Subsection">
+                                                            <a href="#" class="btn-small btn-secondary component-edit" data-type="subsection" data-id="{{ subsection.id }}" data-name="{{ subsection.name|e }}" data-number="{{ subsection.subsection_no|e }}" data-content="{{ subsection.content|e }}" title="Edit Subsection">
                                                                 <i class="action-icon edit-icon">✎</i> Edit
                                                             </a>
-                                                            <a href="#" class="btn-small btn-delete" title="Delete Subsection" onclick="document.getElementById('delete-subsection-form-{{ subsection.id }}').submit(); return false;">
+                                                            <a href="#" class="btn-small btn-delete component-delete" data-type="subsection" data-id="{{ subsection.id }}" title="Delete Subsection">
                                                                 <i class="action-icon delete-icon">×</i> Delete
                                                             </a>
-                                                            <form id="delete-subsection-form-{{ subsection.id }}" action="{{ url_for('hierarchy.delete_subsection', subsection_id=subsection.id) }}" method="post" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this subsection?');" style="display: none;"></form>
                                                         </div>
                                                     </div>
                                                     <div class="subsection-content">
@@ -218,7 +213,7 @@
         {% else %}
         <div class="empty-state">
             <p>No parts have been added to this statute yet.</p>
-            <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add First Part</a>
+            <a href="#" class="btn btn-primary component-add" data-type="part" data-parent-id="{{ statute.id }}">Add First Part</a>
         </div>
         {% endif %}
     </div>
@@ -426,6 +421,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/hierarchy.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize collapsible tree items
