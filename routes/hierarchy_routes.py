@@ -708,3 +708,133 @@ def delete_subsection(subsection_id):
         current_app.logger.error(f"Error deleting subsection: {str(e)}")
         flash("An error occurred while deleting the subsection.", "danger")
         return redirect(url_for('statute.list_statutes'))
+    
+# routes/hierarchy_routes.py
+@hierarchy_bp.route("/statute/<int:statute_id>/bulk-save", methods=["POST"])
+@login_required
+def bulk_save(statute_id):
+    """
+    Atomic save for the inline editor. Handles create / update / delete /
+    reorder across all hierarchy levels and guarantees unique sequential
+    order_no within every sibling group.
+    """
+    from flask import request, jsonify, current_app
+    from sqlalchemy.exc import SQLAlchemyError
+    from extensions import db
+    from models import Part, Chapter, Set, Section, Subsection
+    from collections import defaultdict
+    import itertools
+
+    level_to_model = {
+        "part": Part, "chapter": Chapter,
+        "set": Set, "section": Section, "subsection": Subsection,
+    }
+    num_col = {
+        "part": "part_no", "chapter": "chapter_no", "set": "set_no",
+        "section": "section_no", "subsection": "subsection_no",
+    }
+    parent_fk = {
+        "part": "statute_id",
+        "chapter": "part_id",
+        "set": "chapter_id",
+        "section": "set_id",
+        "subsection": "section_id",
+    }
+
+    payload   = request.get_json(force=True) or {}
+    created   = payload.get("created",  [])
+    updated   = payload.get("updated",  [])
+    deleted   = payload.get("deleted",  [])
+    order_req = {o["id"]: o["order_no"] for o in payload.get("order", [])}
+
+    temp2real = {}
+
+    try:
+        with db.session.no_autoflush:   # ← entire transaction, no premature flush
+            # ---------- deletes ----------
+            for item in deleted:
+                mdl = level_to_model[item["level"]]
+                row = mdl.query.get(item["id"])
+                if row:
+                    db.session.delete(row)
+
+            # ---------- creates ----------
+            for item in created:
+                lvl, mdl = item["level"], level_to_model[item["level"]]
+                row = mdl()
+
+                pk = parent_fk[lvl]
+                setattr(row, pk, statute_id if pk == "statute_id" else item["parent_id"])
+                setattr(row, num_col[lvl], item.get("number"))
+                row.name      = item.get("name")
+                row.order_no  = 0                   # placeholder
+                if lvl == "subsection":
+                    row.content = item.get("content")
+
+                db.session.add(row)
+                db.session.flush()                  # get real PK
+                temp2real[item["temp_id"]] = row.id
+
+            # ---------- updates ----------
+            for item in updated:
+                row = level_to_model[item["level"]].query.get(item["id"])
+                if not row:
+                    continue
+                if "name"    in item: row.name = item["name"]
+                if "number"  in item and item["number"] is not None:
+                    setattr(row, num_col[item["level"]], item["number"])
+                if item["level"] == "subsection" and "content" in item:
+                    row.content = item["content"]
+
+            # ---------- translate temp IDs in order request ----------
+            orders = {temp2real.get(k, k): v for k, v in order_req.items()}
+
+            # ---------- bucket rows by sibling group ----------
+            buckets = defaultdict(list)          # {(lvl,parent): [rows]}
+
+            def bucket_row(row, lvl):
+                parent_id = statute_id if parent_fk[lvl] == "statute_id" \
+                            else getattr(row, parent_fk[lvl])
+                buckets[(lvl, parent_id)].append(row)
+
+            # gather every row of this statute, all levels
+            parts = Part.query.filter_by(statute_id=statute_id).all()
+            for p in parts:
+                bucket_row(p, "part")
+                for ch in p.chapters:
+                    bucket_row(ch, "chapter")
+                    for s in ch.sets:
+                        bucket_row(s, "set")
+                        for sec in s.sections:
+                            bucket_row(sec, "section")
+                            for sub in sec.subsections:
+                                bucket_row(sub, "subsection")
+
+            # ---------- two-phase renumber to avoid duplicates ----------
+            for rows in buckets.values():
+                # phase 1 – assign requested order_no (if any) or keep current
+                for r in rows:
+                    if r.id in orders:
+                        r.order_no = orders[r.id]
+
+                # phase 1½ – give EVERY row a unique high placeholder (10000+i)
+                for i, r in enumerate(rows, 1):
+                    r.order_no = 10000 + i
+
+                # phase 2 – final sequential numbers
+                
+                # Phase-2 – final sequential numbers
+                rows.sort(key=lambda r: orders.get(r.id, r.order_no))
+                for i, r in enumerate(rows, 1):
+                    r.order_no = i
+
+                for i, r in enumerate(rows, 1):
+                    r.order_no = i
+
+        db.session.commit()
+        return jsonify(temp2real), 200
+
+    except SQLAlchemyError as exc:
+        db.session.rollback()
+        current_app.logger.exception("bulk-save failed")
+        return jsonify({"error": "save-failed", "detail": str(exc)}), 400
