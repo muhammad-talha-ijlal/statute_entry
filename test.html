@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    ul { list-style: none; padding-left: 0; }
+    .tree-node { border: 1px solid #bbb; margin: 4px 0; background: #fff; }
+    .drag-handle { cursor: grab; margin-right: 8px; user-select: none; }
+    .dragging { opacity: 0.5; }
+    .dragover { background: #e5f6ff; }
+  </style>
+</head>
+<body>
+  <ul id="tree">
+    <li class="tree-node" data-id="1"><span class="drag-handle">☰</span> Part 1</li>
+    <li class="tree-node" data-id="2"><span class="drag-handle">☰</span> Part 2</li>
+    <li class="tree-node" data-id="3"><span class="drag-handle">☰</span> Part 3</li>
+  </ul>
+<script>
+(function() {
+  function enableDraggable(node) {
+    const handle = node.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', () => { node.draggable = true; });
+    handle.addEventListener('mouseup', ()   => { node.draggable = false; });
+    node.addEventListener('dragstart', function(e) {
+      if (!e.target.classList.contains('drag-handle')) { e.preventDefault(); return false; }
+      node.classList.add('dragging');
+      draggedNode = node;
+    });
+    node.addEventListener('dragend', function() {
+      node.classList.remove('dragging');
+      draggedNode = null;
+      node.draggable = false;
+      tree.classList.remove('dragover');
+    });
+  }
+  let draggedNode = null;
+  const tree = document.getElementById('tree');
+  [...tree.children].forEach(enableDraggable);
+
+  tree.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    if (!draggedNode) return;
+    tree.classList.add('dragover');
+  });
+  tree.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (!draggedNode) return;
+    let target = document.elementFromPoint(e.clientX, e.clientY);
+    let before = null;
+    while (target && target !== tree) {
+      if (target.classList.contains('tree-node')) {
+        before = target;
+        break;
+      }
+      target = target.parentElement;
+    }
+    if (before && before !== draggedNode) {
+      tree.insertBefore(draggedNode, before);
+    } else {
+      tree.appendChild(draggedNode);
+    }
+    tree.classList.remove('dragover');
+  });
+})();
+</script>
+</body>
+</html>

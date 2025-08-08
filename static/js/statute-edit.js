@@ -1,27 +1,24 @@
 (() => {
-  /* ───────────── DOM helpers ───────────── */
   const $  = sel => document.querySelector(sel);
   const $$ = sel => [...document.querySelectorAll(sel)];
 
-  /* ───────── unsaved-state tracker ─────── */
   const state = {};          // id → {status, level, parent_id}
 
-  /* ─────── boot-strap once DOM ready ───── */
   document.addEventListener('DOMContentLoaded', () => {
-    document.addEventListener('click', delegatedClick,  true);   // capture
+    document.addEventListener('click', delegatedClick,  true);
     document.addEventListener('input', delegatedInput,  false);
 
     initGlobalButtons();
+    enableAllDraggables();
     window.onbeforeunload = () => hasUnsaved() ? 'Unsaved changes' : null;
   });
 
-  /* ───────────── click delegate ────────── */
+  // Delegated click for add/edit/delete/move
   function delegatedClick (e) {
     const btn = e.target.closest('.btn-small');
     if (!btn) return;
-    e.preventDefault();                                 // stop # links
+    e.preventDefault();
 
-    /* root-level “Add Part” is not inside a tree-node */
     if (btn.classList.contains('btn-add') && btn.dataset.level === 'part') {
       createPart();
       updateSaveBar();
@@ -51,7 +48,6 @@
     updateSaveBar();
   }
 
-  /* ─────────── input delegate ──────────── */
   function delegatedInput (e) {
     if (e.target.matches('.name-input, .num-input')) {
       markEdited(e.target.closest('.tree-node'));
@@ -59,7 +55,6 @@
     }
   }
 
-  /* ───────── helpers: editability ──────── */
   function toggleEditable (node, enable) {
     node.querySelectorAll('.name-input, .num-input').forEach(i => (i.disabled = !enable));
   }
@@ -73,36 +68,38 @@
 
   const hasUnsaved = () => Object.values(state).some(s => s.status && s.status !== 'unchanged');
 
-  /* ──────── create **Part** at root ─────── */
   function createPart () {
     const rootUl = $('#hierarchy-tree .parts-list.tree-root');
     if (!rootUl) return;
-
     const id = `new-${crypto.randomUUID()}`;
     rootUl.insertAdjacentHTML('beforeend', templateFor('part', id));
     const li = rootUl.lastElementChild;
-
     li.classList.add('new');
     toggleEditable(li, true);
     state[id] = { status: 'new', level: 'part', parent_id: null };
+    enableDraggable(li);
   }
 
-  /* ─────── create any other child node ─── */
   function createChild (parentNode, level) {
-    const ul = parentNode.querySelector(':scope > .tree-children') ||
-               parentNode.appendChild(Object.assign(document.createElement('ul'), { className: 'tree-children' }));
-    ul.dataset.parentId = parentNode.dataset.id;
-
+    let ul = parentNode.querySelector(':scope > .tree-children.sortable-list');
+    if (!ul) {
+      ul = document.createElement('ul');
+      ul.className = 'tree-children sortable-list';
+      ul.dataset.parentId = parentNode.dataset.id;
+      ul.dataset.level = level;
+      parentNode.appendChild(ul);
+      makeSortable(ul);    
+    }
     const id = `new-${crypto.randomUUID()}`;
     ul.insertAdjacentHTML('beforeend', templateFor(level, id));
     const li = ul.lastElementChild;
-
     li.classList.add('new');
     toggleEditable(li, true);
     state[id] = { status: 'new', level, parent_id: parentNode.dataset.id };
+    enableDraggable(li);
   }
 
-  /* ────────── templates & maps ─────────── */
+  // ------ template (with handle) ------
   const LABELS = { part:'PART', chapter:'CHAPTER', set:'SET', section:'SECTION', subsection:'SUBSECTION' };
   const nextLevel = lvl => ({ part:'chapter', chapter:'set', set:'section', section:'subsection' }[lvl]);
 
@@ -111,10 +108,10 @@
     const addBtn = level !== 'subsection'
       ? `<button class="btn-small btn-add" data-level="${next}">+ Add ${LABELS[next]}</button>`
       : `<button class="btn-small btn-edit">✎ Edit</button>`;
-
     return /*html*/`
       <li class="tree-node ${level}-node" data-level="${level}" data-id="${id}">
         <div class="tree-item">
+          <span class="drag-handle" title="Drag to reorder">☰</span>
           ${level==='subsection'
               ? '<div class="tree-leaf-spacer"></div>'
               : '<div class="tree-toggle"><span class="toggle-icon collapsed">▶</span><span class="toggle-icon expanded">▼</span></div>'}
@@ -134,42 +131,36 @@
       </li>`;
   }
 
-/* ---------- move node up / down ---------- */
-function moveNode(btn) {
-  const li   = btn.closest('.tree-node');
-  const list = [...li.parentNode.children];
+  function showLoadingOverlay() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+  }
+  function hideLoadingOverlay() {
+    document.getElementById('loading-overlay').style.display = 'none';
+  }
 
-  const up   = btn.classList.contains('btn-up');
-  const idx  = list.indexOf(li);
-  const swap = up ? idx - 1 : idx + 1;
-  if (swap < 0 || swap >= list.length) return;
+  function moveNode(btn) {
+    const li   = btn.closest('.tree-node');
+    const list = [...li.parentNode.children];
+    const up   = btn.classList.contains('btn-up');
+    const idx  = list.indexOf(li);
+    const swap = up ? idx - 1 : idx + 1;
+    if (swap < 0 || swap >= list.length) return;
+    li.parentNode.insertBefore(li, up ? list[swap] : list[swap].nextSibling);
+    [...li.parentNode.children].forEach((node, i) => {
+      node.dataset.order = i + 1;
+      const id = node.dataset.id;
+      state[id] = { ...(state[id] || {}), status: state[id]?.status || 'unchanged' };
+    });
+    markEdited(li);
+    updateSaveBar();
+  }
 
-  li.parentNode.insertBefore(li, up ? list[swap] : list[swap].nextSibling);
-
-  /* after the move, walk ALL siblings and refresh order + state */
-  [...li.parentNode.children].forEach((node, i) => {
-    node.dataset.order = i + 1;               // purely visual
-    const id = node.dataset.id;
-
-    /* always keep an entry in state so buildPayload pushes it to `order` */
-    state[id] = { ...(state[id] || {}), status: state[id]?.status || 'unchanged' };
-  });
-
-  markEdited(li);   // only the moved row is visually red
-  updateSaveBar();
-}
-
-
-
-  /* ──────── subsection modal ───────────── */
   function launchContentDialog (subNode) {
     const dlg  = $('#subContentDlg');
     const area = $('#dlgContent');
     const div  = subNode.querySelector('.subsection-content');
-
     area.value = div.innerHTML.trim();
     dlg.showModal();
-
     $('#dlgOk').onclick = () => {
       div.innerHTML = area.value;
       markEdited(subNode);
@@ -178,7 +169,6 @@ function moveNode(btn) {
     };
   }
 
-  /* ─────── Save / Cancel toolbar ───────── */
   function initGlobalButtons () {
     $('#statute-save')  .addEventListener('click', saveAll);
     $('#statute-cancel').addEventListener('click', () => location.reload());
@@ -189,47 +179,39 @@ function moveNode(btn) {
     $('#statute-cancel').disabled = !dirty;
   }
 
-  /* ─────── build payload & POST ───────── */
   async function saveAll () {
+    showLoadingOverlay();
     const payload = buildPayload();
-
     try {
       const r = await fetch(`${location.pathname}/bulk-save`, {
         method : 'POST',
-        headers: { 'Content-Type':'application/json',
-                   'X-CSRFToken' : $('meta[name=csrf-token]')?.content || '' },
+        headers: { 'Content-Type':'application/json', 'X-CSRFToken' : $('meta[name=csrf-token]')?.content || '' },
         body   : JSON.stringify(payload)
       });
       if (!r.ok) throw await r.text();
-
       const map = await r.json();
-Object.entries(map).forEach(([tmp, real]) => {
-  const n = document.querySelector(`.tree-node[data-id="${tmp}"]`);
-  if (n) n.dataset.id = real;
-});
-
-/* remove rows that were actually deleted */
-document.querySelectorAll('.tree-node.deleted').forEach(n => n.remove());
-
-/* reset state & colours */
-Object.keys(state).forEach(k => delete state[k]);
-document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('new','edited'));
-updateSaveBar();
-alert('Save successful');
-
+      Object.entries(map).forEach(([tmp, real]) => {
+        const n = document.querySelector(`.tree-node[data-id="${tmp}"]`);
+        if (n) n.dataset.id = real;
+      });
+      document.querySelectorAll('.tree-node.deleted').forEach(n => n.remove());
+      Object.keys(state).forEach(k => delete state[k]);
+      document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('new','edited'));
+      updateSaveBar();
+      hideLoadingOverlay();
+      alert('Save successful');
     } catch (err) {
+      hideLoadingOverlay();
       console.error(err);
       alert(`Save failed:\n${err}`);
     }
   }
 
-  /* ─────── payload helper ─────────────── */
   function buildPayload () {
     const created=[], updated=[], deleted=[], order=[];
     Object.entries(state).forEach(([id, st]) => {
       const node = $(`.tree-node[data-id="${id}"]`);
       if (!node) return;
-
       const level = node.dataset.level;
       const fields = {
         number   : node.querySelector('.num-input') ?.value.trim() || null,
@@ -240,7 +222,6 @@ alert('Save successful');
         order_no : [...node.parentNode.children].indexOf(node)+1,
         parent_id: node.parentNode.dataset.parentId || null
       };
-
       if (st.status==='new')      created.push({temp_id:id, level, ...fields});
       else if (st.status==='edited') updated.push({id, level, ...fields});
       else if (st.status==='deleted') deleted.push({id, level});
@@ -248,4 +229,40 @@ alert('Save successful');
     });
     return {created, updated, deleted, order};
   }
+
+/* ---------- DRAG & DROP (cross-parent) ---------- */
+function makeSortable(ul) {
+  const level = ul.dataset.level || 'all';
+  Sortable.create(ul, {
+    group : { name: `grp-${level}`, pull: true, put: true }, // <-- SAME-LEVEL lists share items
+    handle: '.drag-handle',
+    animation: 150,
+    onUpdate(e){ afterMove(e.to, e.item); },  // same list
+    onAdd(e){ afterMove(e.to, e.item); }      // moved to new parent
+  });
+}
+
+function afterMove(parentList, movedLi) {
+  [...parentList.children].forEach((li, idx) => {
+    li.dataset.order = idx + 1;
+    const id = li.dataset.id;
+    state[id] = state[id] || {};
+    if (state[id].status !== 'new') state[id].status = 'edited';
+  });
+
+  const id = movedLi.dataset.id;
+  state[id] = state[id] || {};
+  state[id].parent_id = parentList.dataset.parentId;
+  if (state[id].status !== 'new') state[id].status = 'edited';
+
+  updateSaveBar();
+}
+
+function enableAllDraggables() {
+  document.querySelectorAll('.sortable-list').forEach(ul => {
+    if (!ul._sortable) makeSortable(ul);
+  });
+}
+/* ---------- END DRAG & DROP ---------- */
+
 })();

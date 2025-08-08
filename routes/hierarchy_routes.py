@@ -709,7 +709,6 @@ def delete_subsection(subsection_id):
         flash("An error occurred while deleting the subsection.", "danger")
         return redirect(url_for('statute.list_statutes'))
     
-# routes/hierarchy_routes.py
 @hierarchy_bp.route("/statute/<int:statute_id>/bulk-save", methods=["POST"])
 @login_required
 def bulk_save(statute_id):
@@ -723,7 +722,6 @@ def bulk_save(statute_id):
     from extensions import db
     from models import Part, Chapter, Set, Section, Subsection
     from collections import defaultdict
-    import itertools
 
     level_to_model = {
         "part": Part, "chapter": Chapter,
@@ -750,7 +748,7 @@ def bulk_save(statute_id):
     temp2real = {}
 
     try:
-        with db.session.no_autoflush:   # ← entire transaction, no premature flush
+        with db.session.no_autoflush:
             # ---------- deletes ----------
             for item in deleted:
                 mdl = level_to_model[item["level"]]
@@ -762,17 +760,15 @@ def bulk_save(statute_id):
             for item in created:
                 lvl, mdl = item["level"], level_to_model[item["level"]]
                 row = mdl()
-
                 pk = parent_fk[lvl]
                 setattr(row, pk, statute_id if pk == "statute_id" else item["parent_id"])
                 setattr(row, num_col[lvl], item.get("number"))
                 row.name      = item.get("name")
-                row.order_no  = 0                   # placeholder
+                row.order_no  = 0  # placeholder
                 if lvl == "subsection":
                     row.content = item.get("content")
-
                 db.session.add(row)
-                db.session.flush()                  # get real PK
+                db.session.flush()  # get real PK
                 temp2real[item["temp_id"]] = row.id
 
             # ---------- updates ----------
@@ -780,8 +776,9 @@ def bulk_save(statute_id):
                 row = level_to_model[item["level"]].query.get(item["id"])
                 if not row:
                     continue
-                if "name"    in item: row.name = item["name"]
-                if "number"  in item and item["number"] is not None:
+                if "name" in item:
+                    row.name = item["name"]
+                if "number" in item and item["number"] is not None:
                     setattr(row, num_col[item["level"]], item["number"])
                 if item["level"] == "subsection" and "content" in item:
                     row.content = item["content"]
@@ -790,14 +787,13 @@ def bulk_save(statute_id):
             orders = {temp2real.get(k, k): v for k, v in order_req.items()}
 
             # ---------- bucket rows by sibling group ----------
-            buckets = defaultdict(list)          # {(lvl,parent): [rows]}
-
+            buckets = defaultdict(list)  # {(lvl,parent): [rows]}
             def bucket_row(row, lvl):
                 parent_id = statute_id if parent_fk[lvl] == "statute_id" \
-                            else getattr(row, parent_fk[lvl])
+                    else getattr(row, parent_fk[lvl])
                 buckets[(lvl, parent_id)].append(row)
 
-            # gather every row of this statute, all levels
+            # Gather every row of this statute, all levels
             parts = Part.query.filter_by(statute_id=statute_id).all()
             for p in parts:
                 bucket_row(p, "part")
@@ -810,31 +806,50 @@ def bulk_save(statute_id):
                             for sub in sec.subsections:
                                 bucket_row(sub, "subsection")
 
-            # ---------- two-phase renumber to avoid duplicates ----------
-            for rows in buckets.values():
-                # phase 1 – assign requested order_no (if any) or keep current
+            # ----- LOGGING: Show the bucket contents before sort -----
+            print("======== BEFORE SORTING BUCKETS =========")
+            for bucket_key, rows in buckets.items():
+                print("Bucket:", bucket_key, "| Count:", len(rows))
                 for r in rows:
-                    if r.id in orders:
-                        r.order_no = orders[r.id]
+                    print(f"    id={r.id}, name={getattr(r, 'name', '')}, order_no={r.order_no}")
 
-                # phase 1½ – give EVERY row a unique high placeholder (10000+i)
-                for i, r in enumerate(rows, 1):
-                    r.order_no = 10000 + i
+            for bucket_key, rows in buckets.items():
+                print(f"\n[Bucket {bucket_key}] Assigning temp order_no to avoid conflicts")
+                for r in rows:
+                    r.order_no = 10000 + r.id
+                    print(f"    id={r.id}, temp_order_no={r.order_no}, name={getattr(r, 'name', '')}")
 
-                # phase 2 – final sequential numbers
-                
-                # Phase-2 – final sequential numbers
-                rows.sort(key=lambda r: orders.get(r.id, r.order_no))
+                db.session.flush()  # THIS IS THE KEY LINE
+                # Build orders dict AFTER all creates and temp2real is populated
+                orders = {}
+                for k, v in order_req.items():
+                    real_id = temp2real.get(k, k)
+                    orders[str(real_id)] = v
+                # Now, sort by intended order and re-assign
+                rows.sort(key=lambda r: orders.get(str(r.id), r.order_no))
+                print(f"[Bucket {bucket_key}] After sorting by orders (request):")
+                for r in rows:
+                    print(f"    id={r.id}, NEW order (request)={orders.get(str(r.id))}, CURRENT order_no={r.order_no}, name={getattr(r, 'name', '')}")
+
                 for i, r in enumerate(rows, 1):
                     r.order_no = i
+                print(f"[Bucket {bucket_key}] After re-assigning order_no (final):")
+                for r in rows:
+                    print(f"    id={r.id}, order_no={r.order_no}, name={getattr(r, 'name', '')}")
 
-                for i, r in enumerate(rows, 1):
-                    r.order_no = i
+
+            print("======== COMMITTING =========")
+            db.session.flush()
+            # Show what will be committed for parts
+            for p in Part.query.filter_by(statute_id=statute_id).order_by(Part.order_no):
+                print(f"[COMMIT PART] id={p.id}, name={p.name}, order_no={p.order_no}")
 
         db.session.commit()
+        print("======== COMMIT DONE =========")
         return jsonify(temp2real), 200
 
     except SQLAlchemyError as exc:
         db.session.rollback()
         current_app.logger.exception("bulk-save failed")
         return jsonify({"error": "save-failed", "detail": str(exc)}), 400
+

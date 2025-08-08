@@ -43,26 +43,24 @@
         </div>
         {% endif %}
 
-        <div class="statute-structure">
+ <div class="statute-structure">
             <div class="structure-header">
                 <h3>Structure</h3>
                 <div class="structure-controls">
                     <button type="button" class="btn-small btn-expand-all">Expand All</button>
                     <button type="button" class="btn-small btn-collapse-all">Collapse All</button>
                     <button class="btn btn-primary btn-small btn-add" data-level="part">
-  + Add Part
-</button>
-
+                        + Add Part
+                    </button>
                 </div>
             </div>
-
             {% if parts %}
             <div class="hierarchy-tree" id="hierarchy-tree">
-                <ul class="parts-list tree-root sortable-list" data-parent-id="{{ statute.id }}" data-level="part"
-                    data-group-name="part">
+                <ul class="parts-list tree-root sortable-list" data-parent-id="{{ statute.id }}" data-level="part" data-group-name="part">
                     {% for part in parts %}
                     <li class="tree-node part-node" data-level="part" data-id="{{ part.id }}">
                         <div class="tree-item part-item">
+                            <span class="drag-handle" title="Drag to reorder">☰</span>
                             <div class="tree-toggle">
                                 <i class="toggle-icon expanded">▼</i>
                                 <i class="toggle-icon collapsed">▶</i>
@@ -73,8 +71,7 @@
                                 <input class="item-name  name-input" value="{{ part.name      }}" disabled>
                             </div>
                             <div class="tree-actions">
-                                <button class="btn-small btn-add" data-action="add" data-level="chapter">+ Add
-                                    Chapter</button>
+                                <button class="btn-small btn-add" data-action="add" data-level="chapter">+ Add Chapter</button>
                                 <button class="btn-small btn-edit" data-action="edit">✎ Edit</button>
                                 <button class="btn-small btn-delete" data-action="delete">× Delete</button>
                                 <button class="btn-small btn-up" data-action="up">▲</button>
@@ -86,26 +83,23 @@
                                     style="display: none;"></form>
                             </div>
                         </div>
-
                         {% if part.chapters %}
-                        <ul class="chapters-list tree-children sortable-list" data-parent-id="{{ part.id }}"
-                            data-level="chapter" data-group-name="chapter">
+                        <ul class="chapters-list tree-children sortable-list" data-parent-id="{{ part.id }}" data-level="chapter" data-group-name="chapter">
                             {% for chapter in part.chapters %}
                             <li class="tree-node chapter-node" data-level="chapter" data-id="{{ chapter.id }}">
                                 <div class="tree-item chapter-item">
+                                    <span class="drag-handle" title="Drag to reorder">☰</span>
                                     <div class="tree-toggle">
                                         <i class="toggle-icon expanded">▼</i>
                                         <i class="toggle-icon collapsed">▶</i>
                                     </div>
                                     <div class="tree-content">
                                         <span class="item-label">CHAPTER</span>
-                                        <input class="item-number num-input" value="{{ chapter.chapter_no or '' }}"
-                                            disabled>
+                                        <input class="item-number num-input" value="{{ chapter.chapter_no or '' }}" disabled>
                                         <input class="item-name  name-input" value="{{ chapter.name      }}" disabled>
                                     </div>
                                     <div class="tree-actions">
-                                        <button class="btn-small btn-add" data-action="add" data-level="set">+ Add
-                                            Set</button>
+                                        <button class="btn-small btn-add" data-action="add" data-level="set">+ Add Set</button>
                                         <button class="btn-small btn-edit" data-action="edit">✎ Edit</button>
                                         <button class="btn-small btn-delete" data-action="delete">× Delete</button>
                                         <button class="btn-small btn-up" data-action="up">▲</button>
@@ -117,32 +111,25 @@
                                             style="display: none;"></form>
                                     </div>
                                 </div>
-
                                 {% if chapter.sets %}
-                                <ul class="sets-list tree-children sortable-list" data-parent-id="{{ chapter.id }}"
-                                    data-level="set" data-group-name="set">
+                                <ul class="sets-list tree-children sortable-list" data-parent-id="{{ chapter.id }}" data-level="set" data-group-name="set">
                                     {% for set in chapter.sets %}
                                     <li class="tree-node set-node" data-level="set" data-id="{{ set.id }}">
                                         <div class="tree-item set-item">
+                                            <span class="drag-handle" title="Drag to reorder">☰</span>
                                             <div class="tree-toggle">
                                                 <i class="toggle-icon expanded">▼</i>
                                                 <i class="toggle-icon collapsed">▶</i>
                                             </div>
                                             <div class="tree-content">
                                                 <span class="item-label">SET</span>
-
-                                                <input class="item-number num-input" value="{{ set.set_no or '' }}"
-                                                    disabled>
-                                                <input class="item-name  name-input" value="{{ set.name      }}"
-                                                    disabled>
+                                                <input class="item-number num-input" value="{{ set.set_no or '' }}" disabled>
+                                                <input class="item-name  name-input" value="{{ set.name      }}" disabled>
                                             </div>
                                             <div class="tree-actions">
-                                                <button class="btn-small btn-add" data-action="add"
-                                                    data-level="section">+ Add
-                                                    Section</button>
+                                                <button class="btn-small btn-add" data-action="add" data-level="section">+ Add Section</button>
                                                 <button class="btn-small btn-edit" data-action="edit">✎ Edit</button>
-                                                <button class="btn-small btn-delete" data-action="delete">×
-                                                    Delete</button>
+                                                <button class="btn-small btn-delete" data-action="delete">× Delete</button>
                                                 <button class="btn-small btn-up" data-action="up">▲</button>
                                                 <button class="btn-small btn-down" data-action="down">▼</button>
                                                 <form id="delete-set-form-{{ set.id }}"
@@ -152,35 +139,25 @@
                                                     style="display: none;"></form>
                                             </div>
                                         </div>
-
                                         {% if set.sections %}
-                                        <ul class="sections-list tree-children sortable-list"
-                                            data-parent-id="{{ set.id }}" data-level="section"
-                                            data-group-name="section">
+                                        <ul class="sections-list tree-children sortable-list" data-parent-id="{{ set.id }}" data-level="section" data-group-name="section">
                                             {% for section in set.sections %}
-                                            <li class="tree-node section-node" data-level="section"
-                                                data-id="{{ section.id }}">
+                                            <li class="tree-node section-node" data-level="section" data-id="{{ section.id }}">
                                                 <div class="tree-item section-item">
+                                                    <span class="drag-handle" title="Drag to reorder">☰</span>
                                                     <div class="tree-toggle">
                                                         <i class="toggle-icon expanded">▼</i>
                                                         <i class="toggle-icon collapsed">▶</i>
                                                     </div>
                                                     <div class="tree-content">
                                                         <span class="item-label">SECTION</span>
-
-                                                        <input class="item-number num-input"
-                                                            value="{{ section.section_no or '' }}" disabled>
-                                                        <input class="item-name  name-input"
-                                                            value="{{ section.name      }}" disabled>
+                                                        <input class="item-number num-input" value="{{ section.section_no or '' }}" disabled>
+                                                        <input class="item-name  name-input" value="{{ section.name      }}" disabled>
                                                     </div>
                                                     <div class="tree-actions">
-                                                        <button class="btn-small btn-add" data-action="add"
-                                                            data-level="subsection">+ Add
-                                                            Subsection</button>
-                                                        <button class="btn-small btn-edit" data-action="edit">✎
-                                                            Edit</button>
-                                                        <button class="btn-small btn-delete" data-action="delete">×
-                                                            Delete</button>
+                                                        <button class="btn-small btn-add" data-action="add" data-level="subsection">+ Add Subsection</button>
+                                                        <button class="btn-small btn-edit" data-action="edit">✎ Edit</button>
+                                                        <button class="btn-small btn-delete" data-action="delete">× Delete</button>
                                                         <button class="btn-small btn-up" data-action="up">▲</button>
                                                         <button class="btn-small btn-down" data-action="down">▼</button>
                                                         <form id="delete-section-form-{{ section.id }}"
@@ -190,33 +167,23 @@
                                                             style="display: none;"></form>
                                                     </div>
                                                 </div>
-
                                                 {% if section.subsections %}
-                                                <ul class="subsections-list tree-children sortable-list"
-                                                    data-parent-id="{{ section.id }}" data-level="subsection"
-                                                    data-group-name="subsection">
+                                                <ul class="subsections-list tree-children sortable-list" data-parent-id="{{ section.id }}" data-level="subsection" data-group-name="subsection">
                                                     {% for subsection in section.subsections %}
-                                                    <li class="tree-node subsection-node leaf-node"
-                                                        data-level="subsection" data-id="{{ subsection.id }}">
+                                                    <li class="tree-node subsection-node leaf-node" data-level="subsection" data-id="{{ subsection.id }}">
                                                         <div class="tree-item subsection-item">
+                                                            <span class="drag-handle" title="Drag to reorder">☰</span>
                                                             <div class="tree-leaf-spacer"></div>
                                                             <div class="tree-content">
                                                                 <span class="item-label">SUBSECTION</span>
-                                                                <input class="item-number num-input"
-                                                                    value="{{ subsection.subsection_no or '' }}"
-                                                                    disabled>
-                                                                <input class="item-name  name-input"
-                                                                    value="{{ subsection.name      }}" disabled>
+                                                                <input class="item-number num-input" value="{{ subsection.subsection_no or '' }}" disabled>
+                                                                <input class="item-name  name-input" value="{{ subsection.name      }}" disabled>
                                                             </div>
                                                             <div class="tree-actions">
-                                                                <button class="btn-small btn-edit" data-action="edit">✎
-                                                                    Edit</button>
-                                                                <button class="btn-small btn-delete"
-                                                                    data-action="delete">× Delete</button>
-                                                                <button class="btn-small btn-up"
-                                                                    data-action="up">▲</button>
-                                                                <button class="btn-small btn-down"
-                                                                    data-action="down">▼</button>
+                                                                <button class="btn-small btn-edit" data-action="edit">✎ Edit</button>
+                                                                <button class="btn-small btn-delete" data-action="delete">× Delete</button>
+                                                                <button class="btn-small btn-up" data-action="up">▲</button>
+                                                                <button class="btn-small btn-down" data-action="down">▼</button>
                                                                 <form id="delete-subsection-form-{{ subsection.id }}"
                                                                     action="{{ url_for('hierarchy.delete_subsection', subsection_id=subsection.id) }}"
                                                                     method="post" class="inline-form"
@@ -266,12 +233,10 @@
             {% else %}
             <div class="empty-state">
                 <p>No parts have been added to this statute yet.</p>
-                <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add First
-                    Part</a>
+                <a href="{{ url_for('hierarchy.add_part', statute_id=statute.id) }}" class="btn btn-primary">Add First Part</a>
             </div>
             {% endif %}
         </div>
-
         <!-- Schedule section with similar structure -->
         <div class="statute-schedules">
             <div class="structure-header">
@@ -537,23 +502,29 @@
             </div>
         </div>
     </div>
-<dialog id="subContentDlg" class="content-dialog">
-  <form method="dialog" class="dialog-frame" tabindex="-1">
-    <header>
-      <h3>Edit Sub-section Content</h3>
-      <button type="button" class="dlg-close" value="cancel" aria-label="Close">×</button>
-    </header>
+    <dialog id="subContentDlg" class="content-dialog">
+        <form method="dialog" class="dialog-frame" tabindex="-1">
+            <header>
+                <h3>Edit Sub-section Content</h3>
+                <button type="button" class="dlg-close" value="cancel" aria-label="Close">×</button>
+            </header>
 
-    <textarea id="dlgContent" rows="18" spellcheck="false"
-              placeholder="Enter rich text or HTML …"></textarea>
+            <textarea id="dlgContent" rows="18" spellcheck="false" placeholder="Enter rich text or HTML …"></textarea>
 
-    <footer>
-      <span id="dlgWordCount">0 words</span>
-      <button type="button" class="btn btn-secondary" value="cancel">Cancel ⎋</button>
-      <button id="dlgOk"      class="btn btn-primary"  value="ok">Save ⌘/Ctrl ↵</button>
-    </footer>
-  </form>
-</dialog>
+            <footer>
+                <span id="dlgWordCount">0 words</span>
+                <button type="button" class="btn btn-secondary" value="cancel">Cancel ⎋</button>
+                <button id="dlgOk" class="btn btn-primary" value="ok">Save ⌘/Ctrl ↵</button>
+            </footer>
+        </form>
+    </dialog>
+<div id="loading-overlay" style="display:none;">
+  <div class="loading-backdrop"></div>
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <span>Saving changes…</span>
+  </div>
+</div>
 
     {% endblock %}
 
@@ -664,4 +635,6 @@
 
     </script>
     <script src="{{ url_for('static', filename='js/statute-edit.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/+esm"></script>
+
     {% endblock %}
